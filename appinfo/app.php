@@ -28,7 +28,7 @@ declare(strict_types=1);
  */
 
 
-namespace OCA\FullTextSearch_ElasticSearch\AppInfo;
+namespace OCA\FullTextSearch_Solr\AppInfo;
 
 
 require_once __DIR__ . '/autoload.php';

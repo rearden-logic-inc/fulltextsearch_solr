@@ -30,7 +30,7 @@
 
 
 
-var elasticsearch_settings = {
+var solr_settings = {
 
 	config: null,
 
@@ -40,7 +40,7 @@ var elasticsearch_settings = {
 			method: 'GET',
 			url: OC.generateUrl('/apps/fulltextsearch_elasticsearch/admin/settings')
 		}).done(function (res) {
-			elasticsearch_settings.updateSettingPage(res);
+			solr_settings.updateSettingPage(res);
 		});
 
 	},
@@ -49,20 +49,20 @@ var elasticsearch_settings = {
 	/** @namespace result.elastic_index */
 	updateSettingPage: function (result) {
 
-		elasticsearch_elements.elasticsearch_host.val(result.elastic_host);
-		elasticsearch_elements.elasticsearch_index.val(result.elastic_index);
-		elasticsearch_elements.analyzer_tokenizer.val(result.analyzer_tokenizer);
+		solr_elements.solr_host.val(result.elastic_host);
+		solr_elements.solr_index.val(result.elastic_index);
+		solr_elements.analyzer_tokenizer.val(result.analyzer_tokenizer);
 
-		fts_admin_settings.tagSettingsAsSaved(elasticsearch_elements.elasticsearch_div);
+		fts_admin_settings.tagSettingsAsSaved(solr_elements.solr_div);
 	},
 
 
 	saveSettings: function () {
 
 		var data = {
-			elastic_host: elasticsearch_elements.elasticsearch_host.val(),
-			elastic_index: elasticsearch_elements.elasticsearch_index.val(),
-			analyzer_tokenizer: elasticsearch_elements.analyzer_tokenizer.val()
+			elastic_host: solr_elements.solr_host.val(),
+			elastic_index: solr_elements.solr_index.val(),
+			analyzer_tokenizer: solr_elements.analyzer_tokenizer.val()
 		};
 
 		$.ajax({
@@ -72,7 +72,7 @@ var elasticsearch_settings = {
 				data: data
 			}
 		}).done(function (res) {
-			elasticsearch_settings.updateSettingPage(res);
+			solr_settings.updateSettingPage(res);
 		});
 
 	}

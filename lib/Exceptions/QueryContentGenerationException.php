@@ -28,13 +28,13 @@ declare(strict_types=1);
  */
 
 
-namespace OCA\FullTextSearch_ElasticSearch\Exceptions;
+namespace OCA\FullTextSearch_Solr\Exceptions;
 
 
 /**
  * Class QueryContentGenerationException
  *
- * @package OCA\FullTextSearch_ElasticSearch\Exceptions
+ * @package OCA\FullTextSearch_Solr\Exceptions
  */
 class QueryContentGenerationException extends \Exception {
 

@@ -28,14 +28,14 @@ declare(strict_types=1);
  */
 
 
-namespace OCA\FullTextSearch_ElasticSearch\Controller;
+namespace OCA\FullTextSearch_Solr\Controller;
 
 
 use Exception;
-use OCA\FullTextSearch_ElasticSearch\AppInfo\Application;
-use OCA\FullTextSearch_ElasticSearch\Service\ConfigService;
-use OCA\FullTextSearch_ElasticSearch\Service\MiscService;
-use OCA\FullTextSearch_ElasticSearch\Service\SettingsService;
+use OCA\FullTextSearch_Solr\AppInfo\Application;
+use OCA\FullTextSearch_Solr\Service\ConfigService;
+use OCA\FullTextSearch_Solr\Service\MiscService;
+use OCA\FullTextSearch_Solr\Service\SettingsService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\DataResponse;

@@ -28,7 +28,7 @@ declare(strict_types=1);
  */
 
 
-namespace OCA\FullTextSearch_ElasticSearch\Platform;
+namespace OCA\FullTextSearch_Solr\Platform;
 
 
 use daita\MySmallPhpTools\Traits\TPathTools;
@@ -36,12 +36,12 @@ use Elasticsearch\Client;
 use Elasticsearch\ClientBuilder;
 use Elasticsearch\Common\Exceptions\BadRequest400Exception;
 use Exception;
-use OCA\FullTextSearch_ElasticSearch\Exceptions\AccessIsEmptyException;
-use OCA\FullTextSearch_ElasticSearch\Exceptions\ConfigurationException;
-use OCA\FullTextSearch_ElasticSearch\Service\ConfigService;
-use OCA\FullTextSearch_ElasticSearch\Service\IndexService;
-use OCA\FullTextSearch_ElasticSearch\Service\MiscService;
-use OCA\FullTextSearch_ElasticSearch\Service\SearchService;
+use OCA\FullTextSearch_Solr\Exceptions\AccessIsEmptyException;
+use OCA\FullTextSearch_Solr\Exceptions\ConfigurationException;
+use OCA\FullTextSearch_Solr\Service\ConfigService;
+use OCA\FullTextSearch_Solr\Service\IndexService;
+use OCA\FullTextSearch_Solr\Service\MiscService;
+use OCA\FullTextSearch_Solr\Service\SearchService;
 use OCP\FullTextSearch\IFullTextSearchPlatform;
 use OCP\FullTextSearch\Model\DocumentAccess;
 use OCP\FullTextSearch\Model\IIndex;
@@ -55,7 +55,7 @@ use OCP\FullTextSearch\Model\ISearchResult;
  *
  * @package OCA\FullTextSearch_ElasticSearch\Platform
  */
-class ElasticSearchPlatform implements IFullTextSearchPlatform {
+class SolrPlatform implements IFullTextSearchPlatform {
 
 
 	use TPathTools;
@@ -103,7 +103,7 @@ class ElasticSearchPlatform implements IFullTextSearchPlatform {
 	 * return a unique Id of the platform.
 	 */
 	public function getId(): string {
-		return 'elastic_search';
+		return 'solr';
 	}
 
 
@@ -111,7 +111,7 @@ class ElasticSearchPlatform implements IFullTextSearchPlatform {
 	 * return a unique Id of the platform.
 	 */
 	public function getName(): string {
-		return 'Elasticsearch';
+		return 'Solr';
 	}
 
 

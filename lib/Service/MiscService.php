@@ -28,17 +28,17 @@ declare(strict_types=1);
  */
 
 
-namespace OCA\FullTextSearch_ElasticSearch\Service;
+namespace OCA\FullTextSearch_Solr\Service;
 
 
-use OCA\FullTextSearch_ElasticSearch\AppInfo\Application;
+use OCA\FullTextSearch_Solr\AppInfo\Application;
 use OCP\ILogger;
 
 
 /**
  * Class MiscService
  *
- * @package OCA\FullTextSearch_ElasticSearch\Service
+ * @package OCA\FullTextSearch_Solr\Service
  */
 class MiscService {
 

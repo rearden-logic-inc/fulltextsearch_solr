@@ -28,7 +28,7 @@ declare(strict_types=1);
  */
 
 
-namespace OCA\FullTextSearch_ElasticSearch\Service;
+namespace OCA\FullTextSearch_Solr\Service;
 
 
 use OCP\IConfig;
@@ -37,7 +37,7 @@ use OCP\IConfig;
 /**
  * Class SettingsService
  *
- * @package OCA\FullTextSearch_ElasticSearch\Service
+ * @package OCA\FullTextSearch_Solr\Service
  */
 class SettingsService {
 

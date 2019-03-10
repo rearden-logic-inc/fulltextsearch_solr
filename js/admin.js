@@ -24,25 +24,25 @@
  */
 
 /** global: OCA */
-/** global: elasticsearch_elements */
-/** global: elasticsearch_settings */
+/** global: solr_elements */
+/** global: solr_settings */
 
 
 $(document).ready(function () {
 
 
 	/**
-	 * @constructs ElasticSearchAdmin
+	 * @constructs SolrAdmin
 	 */
-	var ElasticSearchAdmin = function () {
-		$.extend(ElasticSearchAdmin.prototype, elasticsearch_elements);
-		$.extend(ElasticSearchAdmin.prototype, elasticsearch_settings);
+	var SolrAdmin = function () {
+		$.extend(SolrAdmin.prototype, solr_elements);
+		$.extend(SolrAdmin.prototype, solr_settings);
 
-		elasticsearch_elements.init();
-		elasticsearch_settings.refreshSettingPage();
+		solr_elements.init();
+		solr_settings.refreshSettingPage();
 	};
 
-	OCA.FullTextSearchAdmin.elasticSearch = ElasticSearchAdmin;
-	OCA.FullTextSearchAdmin.elasticSearch.settings = new ElasticSearchAdmin();
+	OCA.FullTextSearchAdmin.solr = SolrAdmin;
+	OCA.FullTextSearchAdmin.solr.settings = new SolrAdmin();
 
 });

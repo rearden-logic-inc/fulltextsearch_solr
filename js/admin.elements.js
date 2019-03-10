@@ -25,38 +25,38 @@
 
 /** global: OCA */
 /** global: fts_admin_settings */
-/** global: elasticsearch_settings */
+/** global: solr_settings */
 
 
-var elasticsearch_elements = {
-	elasticsearch_div: null,
-	elasticsearch_host: null,
-	elasticsearch_index: null,
+var solr_elements = {
+	solr_div: null,
+	solr_host: null,
+	solr_index: null,
 	analyzer_tokenizer: null,
 
 
 	init: function () {
-		elasticsearch_elements.elasticsearch_div = $('#elastic_search');
-		elasticsearch_elements.elasticsearch_host = $('#elasticsearch_host');
-		elasticsearch_elements.elasticsearch_index = $('#elasticsearch_index');
-		elasticsearch_elements.analyzer_tokenizer = $('#analyzer_tokenizer');
+		solr_elements.solr_div = $('#solr');
+		solr_elements.solr_host = $('#solr_host');
+		solr_elements.solr_index = $('#solr_index');
+		solr_elements.analyzer_tokenizer = $('#analyzer_tokenizer');
 
-		elasticsearch_elements.elasticsearch_host.on('input', function () {
+		solr_elements.solr_host.on('input', function () {
 			fts_admin_settings.tagSettingsAsNotSaved($(this));
 		}).blur(function () {
-			elasticsearch_settings.saveSettings();
+			solr_settings.saveSettings();
 		});
 
-		elasticsearch_elements.elasticsearch_index.on('input', function () {
+		solr_elements.solr_index.on('input', function () {
 			fts_admin_settings.tagSettingsAsNotSaved($(this));
 		}).blur(function () {
-			elasticsearch_settings.saveSettings();
+			solr_settings.saveSettings();
 		});
 
-		elasticsearch_elements.analyzer_tokenizer.on('input', function () {
+		solr_elements.analyzer_tokenizer.on('input', function () {
 			fts_admin_settings.tagSettingsAsNotSaved($(this));
 		}).blur(function () {
-			elasticsearch_settings.saveSettings();
+			solr_settings.saveSettings();
 		});
 	}
 

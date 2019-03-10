@@ -1,41 +1,46 @@
 <?xml version="1.0"?>
 <info xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	  xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
-	<id>fulltextsearch_elasticsearch</id>
-	<name>Full text search - Elasticsearch Platform</name>
-	<summary>Index using ElasticSearch</summary>
+	<id>fulltextsearch_solr</id>
+	<name>Full text search - Solr Platform</name>
+	<summary>Index using Solr</summary>
 	<description><![CDATA[
 
-Extension to the _Full text search_ app to communicate with ElasticSearch.
+Extension to the _Full text search_ app to communicate with Solr.
 
 ]]>
 	</description>
 	<version>1.2.4</version>
 	<licence>agpl</licence>
-	<author>Maxence Lange</author>
-	<namespace>FullTextSearch_ElasticSearch</namespace>
+	<author>Rearden Logic</author>
+	<namespace>FullTextSearch_Solr</namespace>
 	<documentation>
+		<!-- TODO: Change -->
 		<admin>https://github.com/nextcloud/fulltextsearch_elasticsearch/wiki</admin>
 	</documentation>
 	<category>search</category>
+	<!-- TODO: Change -->
 	<website>https://github.com/nextcloud/fulltextsearch_elasticsearch</website>
+	<!-- TODO: Change -->
 	<bugs>https://github.com/nextcloud/fulltextsearch_elasticsearch/issues</bugs>
+	<!-- TODO: Change -->
 	<repository>https://github.com/nextcloud/fulltextsearch_elasticsearch.git</repository>
+	<!-- TODO: Change -->
 	<screenshot>https://raw.githubusercontent.com/nextcloud/fulltextsearch/master/screenshots/0.3.0.png</screenshot>
 	<dependencies>
 		<nextcloud min-version="15" max-version="15"/>
 	</dependencies>
 
 	<commands>
-		<command>OCA\FullTextSearch_ElasticSearch\Command\Configure</command>
+		<command>OCA\FullTextSearch_Solr\Command\Configure</command>
 	</commands>
 
 	<settings>
-		<admin>OCA\FullTextSearch_ElasticSearch\Settings\Admin</admin>
+		<admin>OCA\FullTextSearch_Solr\Settings\Admin</admin>
 	</settings>
 
 	<fulltextsearch>
-		<platform>OCA\FullTextSearch_ElasticSearch\Platform\ElasticSearchPlatform</platform>
+		<platform>OCA\FullTextSearch_Solr\Platform\SolrPlatform</platform>
 	</fulltextsearch>
 
 </info>

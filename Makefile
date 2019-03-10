@@ -1,4 +1,4 @@
-app_name=fulltextsearch_elasticsearch
+app_name=fulltextsearch_solr
 
 project_dir=$(CURDIR)
 build_dir=$(CURDIR)/build/artifacts
@@ -8,9 +8,9 @@ sign_dir=$(build_dir)/sign
 package_name=$(app_name)
 cert_dir=$(HOME)/.nextcloud/certificates
 github_account=nextcloud
-branch=stable15
+branch=develop
 codecov_token_dir=$(HOME)/.nextcloud/codecov_token
-version+=1.2.4
+version+=0.1.0
 
 all: appstore
 

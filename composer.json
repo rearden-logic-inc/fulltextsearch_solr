@@ -1,12 +1,12 @@
 {
-  "name": "nextcloud/fulltextsearch_elasticsearch",
-  "description": "fulltextsearch_elasticsearch",
-  "minimum-stability": "stable",
+  "name": "nextcloud/fulltextsearch_solr",
+  "description": "fulltextsearch_solr",
+  "minimum-stability": "alpha",
   "license": "agpl",
   "authors": [
     {
-      "name": "Maxence Lange",
-      "email": "maxence@artificial-owl.com"
+      "name": "Rearden Logic Inc",
+      "email": "rearden@reardenlogic.com"
     }
   ],
   "require": {

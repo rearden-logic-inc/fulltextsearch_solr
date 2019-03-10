@@ -28,13 +28,13 @@ declare(strict_types=1);
  */
 
 
-namespace OCA\FullTextSearch_ElasticSearch\Model;
+namespace OCA\FullTextSearch_Solr\Model;
 
 
 /**
  * Class QueryContent
  *
- * @package OCA\FullTextSearch_ElasticSearch\Model
+ * @package OCA\FullTextSearch_Solr\Model
  */
 class QueryContent {
 

@@ -28,13 +28,13 @@ declare(strict_types=1);
  */
 
 
-namespace OCA\FullTextSearch_ElasticSearch\Settings;
+namespace OCA\FullTextSearch_Solr\Settings;
 
 
 use Exception;
-use OCA\FullTextSearch_ElasticSearch\AppInfo\Application;
-use OCA\FullTextSearch_ElasticSearch\Service\ConfigService;
-use OCA\FullTextSearch_ElasticSearch\Service\MiscService;
+use OCA\FullTextSearch_Solr\AppInfo\Application;
+use OCA\FullTextSearch_Solr\Service\ConfigService;
+use OCA\FullTextSearch_Solr\Service\MiscService;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\IL10N;
 use OCP\IURLGenerator;
@@ -44,7 +44,7 @@ use OCP\Settings\ISettings;
 /**
  * Class Admin
  *
- * @package OCA\FullTextSearch_ElasticSearch\Settings
+ * @package OCA\FullTextSearch_Solr\Settings
  */
 class Admin implements ISettings {
 

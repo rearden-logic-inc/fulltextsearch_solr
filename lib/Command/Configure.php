@@ -28,13 +28,13 @@ declare(strict_types=1);
  */
 
 
-namespace OCA\FullTextSearch_ElasticSearch\Command;
+namespace OCA\FullTextSearch_Solr\Command;
 
 
 use Exception;
 use OC\Core\Command\Base;
-use OCA\FullTextSearch_ElasticSearch\Service\ConfigService;
-use OCA\FullTextSearch_ElasticSearch\Service\MiscService;
+use OCA\FullTextSearch_Solr\Service\ConfigService;
+use OCA\FullTextSearch_Solr\Service\MiscService;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -43,7 +43,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 /**
  * Class Configure
  *
- * @package OCA\FullTextSearch_ElasticSearch\Command
+ * @package OCA\FullTextSearch_Solr\Command
  */
 class Configure extends Base {
 
@@ -74,7 +74,7 @@ class Configure extends Base {
 	 */
 	protected function configure() {
 		parent::configure();
-		$this->setName('fulltextsearch_elasticsearch:configure')
+		$this->setName('fulltextsearch_solr:configure')
 			 ->addArgument('json', InputArgument::REQUIRED, 'set config')
 			 ->setDescription('Configure the installation');
 	}

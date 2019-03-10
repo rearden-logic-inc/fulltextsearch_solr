@@ -41,8 +41,8 @@ Util::addStyle(Application::APP_NAME, 'admin');
 
 ?>
 
-<div id="elastic_search" class="section" style="display: none;">
-	<h2><?php p($l->t('Elastic Search')) ?></h2>
+<div id="solr" class="section" style="display: none;">
+	<h2><?php p($l->t('Solr')) ?></h2>
 
 	<div class="div-table">
 
@@ -53,7 +53,7 @@ Util::addStyle(Application::APP_NAME, 'admin');
 				<em><?php p($l->t('Include your credential in case authentication is required.')); ?></em>
 			</div>
 			<div class="div-table-col">
-				<input type="text" id="elasticsearch_host"
+				<input type="text" id="solr_host"
 					   placeholder="http://username:password@localhost:9200/"/>
 			</div>
 		</div>
@@ -65,7 +65,7 @@ Util::addStyle(Application::APP_NAME, 'admin');
 				<em><?php p($l->t('Name of your index.')); ?></em>
 			</div>
 			<div class="div-table-col">
-				<input type="text" id="elasticsearch_index" placeholder="my_index"/>
+				<input type="text" id="solr_index" placeholder="my_index"/>
 			</div>
 		</div>
 

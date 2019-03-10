@@ -28,14 +28,14 @@ declare(strict_types=1);
  */
 
 
-namespace OCA\FullTextSearch_ElasticSearch\Service;
+namespace OCA\FullTextSearch_Solr\Service;
 
 
 use daita\MySmallPhpTools\Traits\TArrayTools;
 use Elasticsearch\Client;
 use Exception;
-use OCA\FullTextSearch_ElasticSearch\Exceptions\ConfigurationException;
-use OCA\FullTextSearch_ElasticSearch\Exceptions\SearchQueryGenerationException;
+use OCA\FullTextSearch_Solr\Exceptions\ConfigurationException;
+use OCA\FullTextSearch_Solr\Exceptions\SearchQueryGenerationException;
 use OCP\FullTextSearch\Model\DocumentAccess;
 use OCP\FullTextSearch\Model\IndexDocument;
 use OCP\FullTextSearch\Model\ISearchResult;
@@ -44,7 +44,7 @@ use OCP\FullTextSearch\Model\ISearchResult;
 /**
  * Class SearchService
  *
- * @package OCA\FullTextSearch_ElasticSearch\Service
+ * @package OCA\FullTextSearch_Solr\Service
  */
 class SearchService {
 

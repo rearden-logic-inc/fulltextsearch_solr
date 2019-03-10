@@ -2,3 +2,5 @@
 \.idea/
 
 vendor/
+/.idea/
+/fulltextsearch_elasticsearch.iml

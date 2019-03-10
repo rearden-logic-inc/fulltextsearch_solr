@@ -28,13 +28,13 @@ declare(strict_types=1);
  */
 
 
-namespace OCA\FullTextSearch_ElasticSearch\Service;
+namespace OCA\FullTextSearch_Solr\Service;
 
 
-use OCA\FullTextSearch_ElasticSearch\Exceptions\ConfigurationException;
-use OCA\FullTextSearch_ElasticSearch\Exceptions\QueryContentGenerationException;
-use OCA\FullTextSearch_ElasticSearch\Exceptions\SearchQueryGenerationException;
-use OCA\FullTextSearch_ElasticSearch\Model\QueryContent;
+use OCA\FullTextSearch_Solr\Exceptions\ConfigurationException;
+use OCA\FullTextSearch_Solr\Exceptions\QueryContentGenerationException;
+use OCA\FullTextSearch_Solr\Exceptions\SearchQueryGenerationException;
+use OCA\FullTextSearch_Solr\Model\QueryContent;
 use OCP\FullTextSearch\Model\DocumentAccess;
 use OCP\FullTextSearch\Model\ISearchRequest;
 
@@ -42,7 +42,7 @@ use OCP\FullTextSearch\Model\ISearchRequest;
 /**
  * Class SearchMappingService
  *
- * @package OCA\FullTextSearch_ElasticSearch\Service
+ * @package OCA\FullTextSearch_Solr\Service
  */
 class SearchMappingService {
 

@@ -28,7 +28,7 @@ declare(strict_types=1);
  */
 
 
-namespace OCA\FullTextSearch_ElasticSearch\AppInfo;
+namespace OCA\FullTextSearch_Solr\AppInfo;
 
 
 use OCP\AppFramework\App;
@@ -42,7 +42,7 @@ use OCP\AppFramework\App;
 class Application extends App {
 
 
-	const APP_NAME = 'fulltextsearch_elasticsearch';
+	const APP_NAME = 'fulltextsearch_solr';
 
 
 	/**

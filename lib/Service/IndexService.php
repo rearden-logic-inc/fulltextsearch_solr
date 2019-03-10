@@ -28,15 +28,15 @@ declare(strict_types=1);
  */
 
 
-namespace OCA\FullTextSearch_ElasticSearch\Service;
+namespace OCA\FullTextSearch_Solr\Service;
 
 
 use daita\MySmallPhpTools\Traits\TArrayTools;
 use Elasticsearch\Client;
 use Elasticsearch\Common\Exceptions\BadRequest400Exception;
 use Elasticsearch\Common\Exceptions\Missing404Exception;
-use OCA\FullTextSearch_ElasticSearch\Exceptions\AccessIsEmptyException;
-use OCA\FullTextSearch_ElasticSearch\Exceptions\ConfigurationException;
+use OCA\FullTextSearch_Solr\Exceptions\AccessIsEmptyException;
+use OCA\FullTextSearch_Solr\Exceptions\ConfigurationException;
 use OCP\FullTextSearch\Model\IIndex;
 use OCP\FullTextSearch\Model\IndexDocument;
 
@@ -44,7 +44,7 @@ use OCP\FullTextSearch\Model\IndexDocument;
 /**
  * Class IndexService
  *
- * @package OCA\FullTextSearch_ElasticSearch\Service
+ * @package OCA\FullTextSearch_Solr\Service
  */
 class IndexService {
 
