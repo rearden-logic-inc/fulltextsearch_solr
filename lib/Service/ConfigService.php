@@ -45,14 +45,14 @@ use OCP\PreConditionNotMetException;
 class ConfigService {
 
 
-	const ELASTIC_HOST = 'elastic_host';
-	const ELASTIC_INDEX = 'elastic_index';
+	const SOLR_HOST = 'solr_host';
+	const SOLR_INDEX = 'solr_index';
 	const ANALYZER_TOKENIZER = 'analyzer_tokenizer';
 
 
 	public $defaults = [
-		self::ELASTIC_HOST       => '',
-		self::ELASTIC_INDEX      => '',
+		self::SOLR_HOST       => '',
+		self::SOLR_INDEX      => '',
 		self::ANALYZER_TOKENIZER => 'standard'
 	];
 
@@ -113,12 +113,12 @@ class ConfigService {
 	 * @return array
 	 * @throws ConfigurationException
 	 */
-	public function getElasticHost(): array {
+	public function getSolrHost(): array {
 
-		$strHost = $this->getAppValue(self::ELASTIC_HOST);
+		$strHost = $this->getAppValue(self::SOLR_HOST);
 		if ($strHost === '') {
 			throw new ConfigurationException(
-				'Your ElasticSearchPlatform is not configured properly'
+				'Your Solr Platform is not configured properly'
 			);
 		}
 
@@ -132,12 +132,12 @@ class ConfigService {
 	 * @return string
 	 * @throws ConfigurationException
 	 */
-	public function getElasticIndex(): string {
+	public function getSolrIndex(): string {
 
-		$index = $this->getAppValue(self::ELASTIC_INDEX);
+		$index = $this->getAppValue(self::SOLR_INDEX);
 		if ($index === '') {
 			throw new ConfigurationException(
-				'Your ElasticSearchPlatform is not configured properly'
+				'Your Solr Platform is not configured properly'
 			);
 		}
 

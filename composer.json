@@ -10,7 +10,7 @@
     }
   ],
   "require": {
-    "elasticsearch/elasticsearch": "~6.0",
+    "solarium/solarium": "3.6.0",
     "daita/my-small-php-tools": "dev-master"
   }
 }

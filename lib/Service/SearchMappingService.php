@@ -96,7 +96,7 @@ class SearchMappingService {
 		ISearchRequest $request, DocumentAccess $access, string $providerId
 	): array {
 		$params = [
-			'index' => $this->configService->getElasticIndex(),
+			'index' => $this->configService->getSolrIndex(),
 			'type'  => 'standard',
 			'size'  => $request->getSize(),
 			'from'  => (($request->getPage() - 1) * $request->getSize())
@@ -393,7 +393,7 @@ class SearchMappingService {
 	 */
 	public function getDocumentQuery(string $providerId, string $documentId): array {
 		return [
-			'index' => $this->configService->getElasticIndex(),
+			'index' => $this->configService->getSolrIndex(),
 			'type'  => 'standard',
 			'id'    => $providerId . ':' . $documentId
 		];

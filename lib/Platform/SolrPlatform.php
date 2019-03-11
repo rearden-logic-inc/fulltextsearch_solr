@@ -32,9 +32,7 @@ namespace OCA\FullTextSearch_Solr\Platform;
 
 
 use daita\MySmallPhpTools\Traits\TPathTools;
-use Elasticsearch\Client;
-use Elasticsearch\ClientBuilder;
-use Elasticsearch\Common\Exceptions\BadRequest400Exception;
+use Solarium\Client;
 use Exception;
 use OCA\FullTextSearch_Solr\Exceptions\AccessIsEmptyException;
 use OCA\FullTextSearch_Solr\Exceptions\ConfigurationException;
@@ -51,7 +49,10 @@ use OCP\FullTextSearch\Model\ISearchResult;
 
 
 /**
- * Class ElasticSearchPlatform
+ * Class SolrPlatform
+ *
+ * This is the implementation of the FullTextSearchPlatform interface that is expected by the FullTextSearch
+ * application.
  *
  * @package OCA\FullTextSearch_ElasticSearch\Platform
  */
@@ -122,7 +123,7 @@ class SolrPlatform implements IFullTextSearchPlatform {
 	public function getConfiguration(): array {
 
 		$result = [];
-		$hosts = $this->configService->getElasticHost();
+		$hosts = $this->configService->getSolrHost();
 
 		foreach ($hosts as $host) {
 			$parsedHost = parse_url($host);
@@ -137,8 +138,8 @@ class SolrPlatform implements IFullTextSearchPlatform {
 		}
 
 		return [
-			'elastic_host'  => $result,
-			'elastic_index' => $this->configService->getElasticIndex()
+			'solr_host'  => $result,
+			'solr_index' => $this->configService->getSolrIndex()
 		];
 	}
 
@@ -159,12 +160,16 @@ class SolrPlatform implements IFullTextSearchPlatform {
 	 * @throws ConfigurationException
 	 * @throws Exception
 	 */
+	// TODO
 	public function loadPlatform() {
+	    $this->miscService->log("Loading solarium platform", 2);
 		try {
-			$this->connectToElastic($this->configService->getElasticHost());
+			$this->connect($this->configService->getSolrHost());
 		} catch (ConfigurationException $e) {
 			throw $e;
 		}
+
+		$this->testPlatform();
 	}
 
 
@@ -174,7 +179,18 @@ class SolrPlatform implements IFullTextSearchPlatform {
 	 * @return bool
 	 */
 	public function testPlatform(): bool {
-		return $this->client->ping();
+        $this->miscService->log("Executing Ping");
+	    $ping = $this->client->createPing();
+
+	    try {
+            $this->client->ping($ping);
+            $this->miscService->log('Ping Successful');
+            return true;
+        } catch (Exception $e) {
+	        $this->miscService->log('Ping Failed');
+	        $this->miscService->log($e->getTraceAsString());
+        }
+        return false;
 	}
 
 
@@ -186,8 +202,9 @@ class SolrPlatform implements IFullTextSearchPlatform {
 	 * @throws ConfigurationException
 	 * @throws BadRequest400Exception
 	 */
+	// TODO
 	public function initializeIndex() {
-		$this->indexService->initializeIndex($this->client);
+//		$this->indexService->initializeIndex($this->client);
 	}
 
 
@@ -201,12 +218,13 @@ class SolrPlatform implements IFullTextSearchPlatform {
 	 *
 	 * @throws ConfigurationException
 	 */
+	// TODO
 	public function resetIndex(string $providerId) {
-		if ($providerId === 'all') {
-			$this->indexService->resetIndexAll($this->client);
-		} else {
-			$this->indexService->resetIndex($this->client, $providerId);
-		}
+//		if ($providerId === 'all') {
+//			$this->indexService->resetIndexAll($this->client);
+//		} else {
+//			$this->indexService->resetIndex($this->client, $providerId);
+//		}
 	}
 
 
@@ -215,6 +233,7 @@ class SolrPlatform implements IFullTextSearchPlatform {
 	 *
 	 * @return IIndex
 	 */
+	// TODO
 	public function indexDocument(IndexDocument $document): IIndex {
 
 		$document->initHash();
@@ -270,6 +289,7 @@ class SolrPlatform implements IFullTextSearchPlatform {
 	 * @throws ConfigurationException
 	 * @throws \Exception
 	 */
+	// TODO
 	private function indexDocumentError(IndexDocument $document, Exception $e): array {
 
 		$this->updateRunnerAction('indexDocumentWithoutContent', true);
@@ -288,6 +308,7 @@ class SolrPlatform implements IFullTextSearchPlatform {
 	 * @param IndexDocument $document
 	 * @param Exception $e
 	 */
+	//TODO
 	private function manageIndexErrorException(IndexDocument $document, Exception $e) {
 
 		$message = $this->parseIndexErrorException($e);
@@ -362,25 +383,23 @@ class SolrPlatform implements IFullTextSearchPlatform {
 	 *
 	 * @throws Exception
 	 */
-	private function connectToElastic(array $hosts) {
+	private function connect(array $hosts) {
 
 		try {
-			$hosts = array_map([$this, 'cleanHost'], $hosts);
-			$this->client = ClientBuilder::create()
-										 ->setHosts($hosts)
-										 ->setRetries(3)
-										 ->build();
-
-//		}
-//		catch (CouldNotConnectToHost $e) {
-//			$this 'CouldNotConnectToHost';
-//			$previous = $e->getPrevious();
-//			if ($previous instanceof MaxRetriesException) {
-//				echo "Max retries!";
-//			}
+		    // TODO: Configure this correctly to use the values that are stored in the configuration details
+			$config = array(
+                'endpoint' => array(
+                    'solr' => array(
+                        'host' => 'solr',
+                        'port' => 8983,
+                        'path' => '/solr/',
+                        'core' => 'mycore',  // This is probably the index value
+                    )
+                )
+            );
+			$this->client = new Client($config);
 		} catch (Exception $e) {
 			throw $e;
-//			echo ' ElasticSearchPlatform::load() Exception --- ' . $e->getMessage() . "\n";
 		}
 	}
 

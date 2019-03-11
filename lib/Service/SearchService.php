@@ -32,7 +32,7 @@ namespace OCA\FullTextSearch_Solr\Service;
 
 
 use daita\MySmallPhpTools\Traits\TArrayTools;
-use Elasticsearch\Client;
+use Solarium\Client;
 use Exception;
 use OCA\FullTextSearch_Solr\Exceptions\ConfigurationException;
 use OCA\FullTextSearch_Solr\Exceptions\SearchQueryGenerationException;
@@ -79,33 +79,34 @@ class SearchService {
 	 *
 	 * @throws Exception
 	 */
+	// TODO
 	public function searchRequest(
 		Client $client, ISearchResult $searchResult, DocumentAccess $access
 	) {
-		try {
-			$query = $this->searchMappingService->generateSearchQuery(
-				$searchResult->getRequest(), $access, $searchResult->getProvider()
-																   ->getId()
-			);
-		} catch (SearchQueryGenerationException $e) {
-			return;
-		}
-
-		try {
-			$result = $client->search($query['params']);
-		} catch (Exception $e) {
-			$this->miscService->log(
-				'debug - request: ' . json_encode($searchResult->getRequest()) . '   - query: '
-				. json_encode($query)
-			);
-			throw $e;
-		}
-
-		$this->updateSearchResult($searchResult, $result);
-
-		foreach ($result['hits']['hits'] as $entry) {
-			$searchResult->addDocument($this->parseSearchEntry($entry, $access->getViewerId()));
-		}
+//		try {
+//			$query = $this->searchMappingService->generateSearchQuery(
+//				$searchResult->getRequest(), $access, $searchResult->getProvider()
+//																   ->getId()
+//			);
+//		} catch (SearchQueryGenerationException $e) {
+//			return;
+//		}
+//
+//		try {
+//			$result = $client->search($query['params']);
+//		} catch (Exception $e) {
+//			$this->miscService->log(
+//				'debug - request: ' . json_encode($searchResult->getRequest()) . '   - query: '
+//				. json_encode($query)
+//			);
+//			throw $e;
+//		}
+//
+//		$this->updateSearchResult($searchResult, $result);
+//
+//		foreach ($result['hits']['hits'] as $entry) {
+//			$searchResult->addDocument($this->parseSearchEntry($entry, $access->getViewerId()));
+//		}
 	}
 
 
@@ -158,33 +159,35 @@ class SearchService {
 	 * @return IndexDocument
 	 * @throws ConfigurationException
 	 */
+	//TODO
 	public function getDocument(Client $client, string $providerId, string $documentId
 	): IndexDocument {
-		$query = $this->searchMappingService->getDocumentQuery($providerId, $documentId);
-		$result = $client->get($query);
-
-		$access = new DocumentAccess($result['_source']['owner']);
-		$access->setUsers($result['_source']['users']);
-		$access->setGroups($result['_source']['groups']);
-		$access->setCircles($result['_source']['circles']);
-		$access->setLinks($result['_source']['links']);
-
-		$index = new IndexDocument($providerId, $documentId);
-		$index->setAccess($access);
-		$index->setMetaTags($result['_source']['metatags']);
-		$index->setSubTags($result['_source']['subtags']);
-		$index->setTags($result['_source']['tags']);
-//		$index->setMore($result['_source']['more']);
-//		$index->setInfo($result['_source']['info']);
-		$index->setHash($result['_source']['hash']);
-		$index->setSource($result['_source']['source']);
-		$index->setTitle($result['_source']['title']);
-		$index->setParts($result['_source']['parts']);
-
-		$content = $this->get('content', $result['_source'], '');
-		$index->setContent($content);
-
-		return $index;
+	    return null;
+//		$query = $this->searchMappingService->getDocumentQuery($providerId, $documentId);
+//		$result = $client->get($query);
+//
+//		$access = new DocumentAccess($result['_source']['owner']);
+//		$access->setUsers($result['_source']['users']);
+//		$access->setGroups($result['_source']['groups']);
+//		$access->setCircles($result['_source']['circles']);
+//		$access->setLinks($result['_source']['links']);
+//
+//		$index = new IndexDocument($providerId, $documentId);
+//		$index->setAccess($access);
+//		$index->setMetaTags($result['_source']['metatags']);
+//		$index->setSubTags($result['_source']['subtags']);
+//		$index->setTags($result['_source']['tags']);
+////		$index->setMore($result['_source']['more']);
+////		$index->setInfo($result['_source']['info']);
+//		$index->setHash($result['_source']['hash']);
+//		$index->setSource($result['_source']['source']);
+//		$index->setTitle($result['_source']['title']);
+//		$index->setParts($result['_source']['parts']);
+//
+//		$content = $this->get('content', $result['_source'], '');
+//		$index->setContent($content);
+//
+//		return $index;
 	}
 
 

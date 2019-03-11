@@ -27,8 +27,11 @@
 /** global: fts_admin_settings */
 /** global: solr_settings */
 
-
+// Container with the divs and input fields that contain the content.  On init, will configure all of the event
+// listeners.
 var solr_elements = {
+
+	// These are the divs that are used to display and retrieve the values of the configuration.
 	solr_div: null,
 	solr_host: null,
 	solr_index: null,
@@ -59,7 +62,6 @@ var solr_elements = {
 			solr_settings.saveSettings();
 		});
 	}
-
 
 };
 

@@ -29,7 +29,7 @@ declare(strict_types=1);
 
 
 
-use OCA\FullTextSearch_ElasticSearch\AppInfo\Application;
+use OCA\FullTextSearch_Solr\AppInfo\Application;
 use OCP\Util;
 
 
@@ -54,7 +54,7 @@ Util::addStyle(Application::APP_NAME, 'admin');
 			</div>
 			<div class="div-table-col">
 				<input type="text" id="solr_host"
-					   placeholder="http://username:password@localhost:9200/"/>
+					   placeholder="http://username:password@localhost:8983/"/>
 			</div>
 		</div>
 

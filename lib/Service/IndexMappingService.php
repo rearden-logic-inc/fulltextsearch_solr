@@ -31,8 +31,7 @@ declare(strict_types=1);
 namespace OCA\FullTextSearch_Solr\Service;
 
 
-use Elasticsearch\Client;
-use Elasticsearch\Common\Exceptions\Missing404Exception;
+use Solarium\Client;
 use OCA\FullTextSearch_Solr\Exceptions\AccessIsEmptyException;
 use OCA\FullTextSearch_Solr\Exceptions\ConfigurationException;
 use OCP\FullTextSearch\Model\IIndex;
@@ -75,19 +74,42 @@ class IndexMappingService {
 	 * @throws AccessIsEmptyException
 	 */
 	public function indexDocumentNew(Client $client, IndexDocument $document): array {
-		$index = [
-			'index' =>
-				[
-					'index' => $this->configService->getElasticIndex(),
-					'id'    => $document->getProviderId() . ':' . $document->getId(),
-					'type'  => 'standard',
-					'body'  => $this->generateIndexBody($document)
-				]
-		];
+        echo("Running indexDocumentNew");
+	    echo("Setting document to " . $document->getSource());
 
-		$this->onIndexingDocument($document, $index);
+	    $query = $client->createExtract();
+	    $query->addFieldMapping('content', 'text');
+	    $query->setUprefix('attr_');
+	    $query->setFile($document->getSource());
+	    $query->setCommit(true);
+	    $query->setOmitHeader(false);
 
-		return $client->index($index['index']);
+	    $doc = $query->createDocument();
+	    $doc->id = $document->getProviderId() . ":" . $document->getId();
+        $doc->type = 'standard';
+	    $doc->body = $this->generateIndexBody($document);
+
+	    $query->setDocument($doc);
+
+	    $result = $client->extract($query);
+
+	    echo("Result: ". implode("|", $result->getData()));
+
+	    return $result->getData();
+
+//		$index = [
+//			'index' =>
+//				[
+//					'index' => $this->configService->getSolrIndex(),
+//					'id'    => $document->getProviderId() . ':' . $document->getId(),
+//					'type'  => 'standard',
+//					'body'  => $this->generateIndexBody($document)
+//				]
+//		];
+//
+//		$this->onIndexingDocument($document, $index);
+//
+//		return $client->index($index['index']);
 	}
 
 
@@ -99,23 +121,28 @@ class IndexMappingService {
 	 * @throws ConfigurationException
 	 * @throws AccessIsEmptyException
 	 */
+	// TODO:
 	public function indexDocumentUpdate(Client $client, IndexDocument $document): array {
-		$index = [
-			'index' =>
-				[
-					'index' => $this->configService->getElasticIndex(),
-					'id'    => $document->getProviderId() . ':' . $document->getId(),
-					'type'  => 'standard',
-					'body'  => ['doc' => $this->generateIndexBody($document)]
-				]
-		];
 
-		$this->onIndexingDocument($document, $index);
-		try {
-			return $client->update($index['index']);
-		} catch (Missing404Exception $e) {
-			return $this->indexDocumentNew($client, $document);
-		}
+	   echo("Running indexDocumentUpdate");
+
+	    return null;
+//		$index = [
+//			'index' =>
+//				[
+//					'index' => $this->configService->getSolrIndex(),
+//					'id'    => $document->getProviderId() . ':' . $document->getId(),
+//					'type'  => 'standard',
+//					'body'  => ['doc' => $this->generateIndexBody($document)]
+//				]
+//		];
+//
+//		$this->onIndexingDocument($document, $index);
+//		try {
+//			return $client->update($index['index']);
+//		} catch (Missing404Exception $e) {
+//			return $this->indexDocumentNew($client, $document);
+//		}
 	}
 
 
@@ -130,7 +157,7 @@ class IndexMappingService {
 		$index = [
 			'index' =>
 				[
-					'index' => $this->configService->getElasticIndex(),
+					'index' => $this->configService->getSolrIndex(),
 					'id'    => $providerId . ':' . $documentId,
 					'type'  => 'standard'
 				]
@@ -207,7 +234,7 @@ class IndexMappingService {
 	public function generateGlobalMap(bool $complete = true): array {
 
 		$params = [
-			'index' => $this->configService->getElasticIndex()
+			'index' => $this->configService->getSolrIndex()
 		];
 
 		if ($complete === false) {
@@ -363,7 +390,7 @@ class IndexMappingService {
 	 */
 	public function generateDeleteQuery(string $providerId): array {
 		$params = [
-			'index' => $this->configService->getElasticIndex(),
+			'index' => $this->configService->getSolrIndex(),
 			'type'  => 'standard'
 		];
 

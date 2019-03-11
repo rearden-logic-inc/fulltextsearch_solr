@@ -31,10 +31,8 @@ declare(strict_types=1);
 namespace OCA\FullTextSearch_Solr\Service;
 
 
+use Solarium\Client;
 use daita\MySmallPhpTools\Traits\TArrayTools;
-use Elasticsearch\Client;
-use Elasticsearch\Common\Exceptions\BadRequest400Exception;
-use Elasticsearch\Common\Exceptions\Missing404Exception;
 use OCA\FullTextSearch_Solr\Exceptions\AccessIsEmptyException;
 use OCA\FullTextSearch_Solr\Exceptions\ConfigurationException;
 use OCP\FullTextSearch\Model\IIndex;
@@ -79,15 +77,17 @@ class IndexService {
 	 * @return bool
 	 * @throws ConfigurationException
 	 */
+	// TODO
 	public function testIndex(Client $client): bool {
 
-		$map = $this->indexMappingService->generateGlobalMap(false);
-		$map['client'] = [
-			'verbose' => true
-		];
-
-		return $client->indices()
-					  ->exists($map);
+//		$map = $this->indexMappingService->generateGlobalMap(false);
+//		$map['client'] = [
+//			'verbose' => true
+//		];
+//
+//		return $client->indices()
+//					  ->exists($map);
+        return false;
 	}
 
 
@@ -97,25 +97,26 @@ class IndexService {
 	 * @throws ConfigurationException
 	 * @throws BadRequest400Exception
 	 */
+	// TODO
 	public function initializeIndex(Client $client) {
-		try {
-			if ($client->indices()
-					   ->exists($this->indexMappingService->generateGlobalMap(false))) {
-				return;
-			}
-		} catch (BadRequest400Exception $e) {
-			$this->parseBadRequest400($e);
-		}
-
-		try {
-			$client->indices()
-				   ->create($this->indexMappingService->generateGlobalMap());
-			$client->ingest()
-				   ->putPipeline($this->indexMappingService->generateGlobalIngest());
-		} catch (BadRequest400Exception $e) {
-			$this->resetIndexAll($client);
-			$this->parseBadRequest400($e);
-		}
+//		try {
+//			if ($client->indices()
+//					   ->exists($this->indexMappingService->generateGlobalMap(false))) {
+//				return;
+//			}
+//		} catch (BadRequest400Exception $e) {
+//			$this->parseBadRequest400($e);
+//		}
+//
+//		try {
+//			$client->indices()
+//				   ->create($this->indexMappingService->generateGlobalMap());
+//			$client->ingest()
+//				   ->putPipeline($this->indexMappingService->generateGlobalIngest());
+//		} catch (BadRequest400Exception $e) {
+//			$this->resetIndexAll($client);
+//			$this->parseBadRequest400($e);
+//		}
 	}
 
 
@@ -125,12 +126,13 @@ class IndexService {
 	 *
 	 * @throws ConfigurationException
 	 */
+	// TODO:
 	public function resetIndex(Client $client, string $providerId) {
-		try {
-			$client->deleteByQuery($this->indexMappingService->generateDeleteQuery($providerId));
-		} catch (Missing404Exception $e) {
-			/** we do nothin' */
-		}
+//		try {
+//			$client->deleteByQuery($this->indexMappingService->generateDeleteQuery($providerId));
+//		} catch (Missing404Exception $e) {
+//			/** we do nothin' */
+//		}
 	}
 
 
@@ -139,24 +141,25 @@ class IndexService {
 	 *
 	 * @throws ConfigurationException
 	 */
+	// TODO:
 	public function resetIndexAll(Client $client) {
-		try {
-			$client->ingest()
-				   ->deletePipeline($this->indexMappingService->generateGlobalIngest(false));
-		} catch (Missing404Exception $e) {
-			/* 404Exception will means that the mapping for that provider does not exist */
-		} catch (BadRequest400Exception $e) {
-			throw new ConfigurationException(
-				'Check your user/password and the index assigned to that cloud'
-			);
-		}
-
-		try {
-			$client->indices()
-				   ->delete($this->indexMappingService->generateGlobalMap(false));
-		} catch (Missing404Exception $e) {
-			/* 404Exception will means that the mapping for that provider does not exist */
-		}
+//		try {
+//			$client->ingest()
+//				   ->deletePipeline($this->indexMappingService->generateGlobalIngest(false));
+//		} catch (Missing404Exception $e) {
+//			/* 404Exception will means that the mapping for that provider does not exist */
+//		} catch (BadRequest400Exception $e) {
+//			throw new ConfigurationException(
+//				'Check your user/password and the index assigned to that cloud'
+//			);
+//		}
+//
+//		try {
+//			$client->indices()
+//				   ->delete($this->indexMappingService->generateGlobalMap(false));
+//		} catch (Missing404Exception $e) {
+//			/* 404Exception will means that the mapping for that provider does not exist */
+//		}
 	}
 
 
@@ -166,12 +169,13 @@ class IndexService {
 	 *
 	 * @throws ConfigurationException
 	 */
+	// TODO:
 	public function deleteIndexes(Client $client, array $indexes) {
-		foreach ($indexes as $index) {
-			$this->indexMappingService->indexDocumentRemove(
-				$client, $index->getProviderId(), $index->getDocumentId()
-			);
-		}
+//		foreach ($indexes as $index) {
+//			$this->indexMappingService->indexDocumentRemove(
+//				$client, $index->getProviderId(), $index->getDocumentId()
+//			);
+//		}
 	}
 
 
@@ -211,21 +215,24 @@ class IndexService {
 
 		$index->setLastIndex();
 
-		if (array_key_exists('exception', $result)) {
-			$index->setStatus(IIndex::INDEX_FAILED);
-			$index->addError(
-				$this->get('message', $result, $result['exception']),
-				'',
-				IIndex::ERROR_SEV_3
-			);
+		echo("Running parse Index Result");
+		echo(implode("|", $result));
 
-			return $index;
-		}
-
-		// TODO: parse result
-		if ($index->getErrorCount() === 0) {
-			$index->setStatus(IIndex::INDEX_DONE);
-		}
+//		if (array_key_exists('exception', $result)) {
+//			$index->setStatus(IIndex::INDEX_FAILED);
+//			$index->addError(
+//				$this->get('message', $result, $result['exception']),
+//				'',
+//				IIndex::ERROR_SEV_3
+//			);
+//
+//			return $index;
+//		}
+//
+//		// TODO: parse result
+//		if ($index->getErrorCount() === 0) {
+//			$index->setStatus(IIndex::INDEX_DONE);
+//		}
 
 		return $index;
 	}

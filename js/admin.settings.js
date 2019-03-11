@@ -24,33 +24,32 @@
  */
 
 /** global: OC */
-/** global: elasticsearch_elements */
+/** global: solr_elements */
 /** global: fts_admin_settings */
 
-
-
-
+// Simple controller for handling the saving and retrieving of the settings from the next cloud server.
 var solr_settings = {
 
-	config: null,
+	settings_url: '/apps/fulltextsearch_solr/admin/settings',
 
 	refreshSettingPage: function () {
 
 		$.ajax({
 			method: 'GET',
-			url: OC.generateUrl('/apps/fulltextsearch_elasticsearch/admin/settings')
+			url: OC.generateUrl(solr_settings.settings_url)
 		}).done(function (res) {
 			solr_settings.updateSettingPage(res);
 		});
 
 	},
 
-	/** @namespace result.elastic_host */
-	/** @namespace result.elastic_index */
+	/** @namespace result.solr_host */
+	/** @namespace result.solr_index */
+	/** @namespace result.analyzer_tokenizer */
 	updateSettingPage: function (result) {
 
-		solr_elements.solr_host.val(result.elastic_host);
-		solr_elements.solr_index.val(result.elastic_index);
+		solr_elements.solr_host.val(result.solr_host);
+		solr_elements.solr_index.val(result.solr_index);
 		solr_elements.analyzer_tokenizer.val(result.analyzer_tokenizer);
 
 		fts_admin_settings.tagSettingsAsSaved(solr_elements.solr_div);
@@ -60,14 +59,14 @@ var solr_settings = {
 	saveSettings: function () {
 
 		var data = {
-			elastic_host: solr_elements.solr_host.val(),
-			elastic_index: solr_elements.solr_index.val(),
+			solr_host: solr_elements.solr_host.val(),
+			solr_index: solr_elements.solr_index.val(),
 			analyzer_tokenizer: solr_elements.analyzer_tokenizer.val()
 		};
 
 		$.ajax({
 			method: 'POST',
-			url: OC.generateUrl('/apps/fulltextsearch_elasticsearch/admin/settings'),
+			url: OC.generateUrl(solr_settings.settings_url),
 			data: {
 				data: data
 			}
