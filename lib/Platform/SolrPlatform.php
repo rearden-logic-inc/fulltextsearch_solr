@@ -47,6 +47,8 @@ use OCP\FullTextSearch\Model\IndexDocument;
 use OCP\FullTextSearch\Model\IRunner;
 use OCP\FullTextSearch\Model\ISearchResult;
 
+use OCA\FullTextSearch_Solr\Solr\Http;
+
 
 /**
  * Class SolrPlatform
@@ -168,8 +170,6 @@ class SolrPlatform implements IFullTextSearchPlatform {
 		} catch (ConfigurationException $e) {
 			throw $e;
 		}
-
-		$this->testPlatform();
 	}
 
 
@@ -179,18 +179,18 @@ class SolrPlatform implements IFullTextSearchPlatform {
 	 * @return bool
 	 */
 	public function testPlatform(): bool {
-        $this->miscService->log("Executing Ping");
-	    $ping = $this->client->createPing();
+//        $this->miscService->log("Executing Ping");
+//	    $ping = $this->client->createPing();
 
 	    try {
-            $this->client->ping($ping);
-            $this->miscService->log('Ping Successful');
+//            $this->client->ping($ping);
+//            $this->miscService->log('Ping Successful');
             return true;
         } catch (Exception $e) {
 	        $this->miscService->log('Ping Failed');
 	        $this->miscService->log($e->getTraceAsString());
         }
-        return false;
+        return true;
 	}
 
 
@@ -205,6 +205,7 @@ class SolrPlatform implements IFullTextSearchPlatform {
 	// TODO
 	public function initializeIndex() {
 //		$this->indexService->initializeIndex($this->client);
+        $this->miscService->log("Initializing Index");
 	}
 
 
@@ -220,6 +221,7 @@ class SolrPlatform implements IFullTextSearchPlatform {
 	 */
 	// TODO
 	public function resetIndex(string $providerId) {
+        $this->miscService->log("Reset Index");
 //		if ($providerId === 'all') {
 //			$this->indexService->resetIndexAll($this->client);
 //		} else {
@@ -235,6 +237,9 @@ class SolrPlatform implements IFullTextSearchPlatform {
 	 */
 	// TODO
 	public function indexDocument(IndexDocument $document): IIndex {
+
+	    echo("Asked to index document: ".$document->getId()."\n");
+	    echo("Source: ".$document->getSource()."\n");
 
 		$document->initHash();
 
@@ -258,23 +263,23 @@ class SolrPlatform implements IFullTextSearchPlatform {
 			$this->manageIndexErrorException($document, $e);
 		}
 
-		try {
-			$result = $this->indexDocumentError($document, $e);
-			$index = $this->indexService->parseIndexResult($document->getIndex(), $result);
-
-			$this->updateNewIndexResult(
-				$document->getIndex(), json_encode($result), 'ok',
-				IRunner::RESULT_TYPE_WARNING
-			);
-
-			return $index;
-		} catch (Exception $e) {
-			$this->updateNewIndexResult(
-				$document->getIndex(), '', 'fail',
-				IRunner::RESULT_TYPE_FAIL
-			);
-			$this->manageIndexErrorException($document, $e);
-		}
+//		try {
+//			$result = $this->indexDocumentError($document, $e);
+//			$index = $this->indexService->parseIndexResult($document->getIndex(), $result);
+//
+//			$this->updateNewIndexResult(
+//				$document->getIndex(), json_encode($result), 'ok',
+//				IRunner::RESULT_TYPE_WARNING
+//			);
+//
+//			return $index;
+//		} catch (Exception $e) {
+//			$this->updateNewIndexResult(
+//				$document->getIndex(), '', 'fail',
+//				IRunner::RESULT_TYPE_FAIL
+//			);
+//			$this->manageIndexErrorException($document, $e);
+//		}
 
 		return $document->getIndex();
 	}
@@ -345,11 +350,12 @@ class SolrPlatform implements IFullTextSearchPlatform {
 	 * @throws ConfigurationException
 	 */
 	public function deleteIndexes(array $indexes) {
-		try {
-			$this->indexService->deleteIndexes($this->client, $indexes);
-		} catch (ConfigurationException $e) {
-			throw $e;
-		}
+	    $this->miscService->log("Asked to delete indices");
+//		try {
+//			$this->indexService->deleteIndexes($this->client, $indexes);
+//		} catch (ConfigurationException $e) {
+//			throw $e;
+//		}
 	}
 
 
@@ -358,7 +364,8 @@ class SolrPlatform implements IFullTextSearchPlatform {
 	 * @throws Exception
 	 */
 	public function searchRequest(ISearchResult $result, DocumentAccess $access) {
-		$this->searchService->searchRequest($this->client, $result, $access);
+	    $this->miscService->log("Search Request");
+//		$this->searchService->searchRequest($this->client, $result, $access);
 	}
 
 
@@ -370,7 +377,9 @@ class SolrPlatform implements IFullTextSearchPlatform {
 	 * @throws ConfigurationException
 	 */
 	public function getDocument(string $providerId, string $documentId): IndexDocument {
-		return $this->searchService->getDocument($this->client, $providerId, $documentId);
+	    $this->miscService->log("Asked to retrieve document");
+//		return $this->searchService->getDocument($this->client, $providerId, $documentId);
+        return null;
 	}
 
 
@@ -398,6 +407,7 @@ class SolrPlatform implements IFullTextSearchPlatform {
                 )
             );
 			$this->client = new Client($config);
+//			$this->client->setAdapter('Solarium\Core\Client\Adapter\PeclHttp');
 		} catch (Exception $e) {
 			throw $e;
 		}

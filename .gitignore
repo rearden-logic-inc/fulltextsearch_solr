@@ -3,5 +3,5 @@
 
 vendor/
 /.idea/
-/fulltextsearch_elasticsearch.iml
+/fulltextsearch_solr.iml
 /nextcloud

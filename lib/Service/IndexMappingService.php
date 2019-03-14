@@ -31,11 +31,11 @@ declare(strict_types=1);
 namespace OCA\FullTextSearch_Solr\Service;
 
 
-use Solarium\Client;
 use OCA\FullTextSearch_Solr\Exceptions\AccessIsEmptyException;
 use OCA\FullTextSearch_Solr\Exceptions\ConfigurationException;
-use OCP\FullTextSearch\Model\IIndex;
+use OCP\Files\IRootFolder;
 use OCP\FullTextSearch\Model\IndexDocument;
+use Solarium\Client;
 
 
 /**
@@ -52,6 +52,9 @@ class IndexMappingService {
 	/** @var MiscService */
 	private $miscService;
 
+	/** @var IRootFolder */
+	private $rootFolder;
+
 
 	/**
 	 * IndexMappingService constructor.
@@ -59,35 +62,43 @@ class IndexMappingService {
 	 * @param ConfigService $configService
 	 * @param MiscService $miscService
 	 */
-	public function __construct(ConfigService $configService, MiscService $miscService) {
+	public function __construct(ConfigService $configService, MiscService $miscService, IRootFolder $rootFolder) {
 		$this->configService = $configService;
 		$this->miscService = $miscService;
+		$this->rootFolder = $rootFolder;
 	}
 
 
-	/**
-	 * @param Client $client
-	 * @param IndexDocument $document
-	 *
-	 * @return array
-	 * @throws ConfigurationException
-	 * @throws AccessIsEmptyException
-	 */
+    /**
+     * @param Client $client
+     * @param IndexDocument $document
+     *
+     * @return array
+     * @throws ConfigurationException
+     * @throws AccessIsEmptyException
+     * @throws \OCP\Files\NotFoundException
+     */
 	public function indexDocumentNew(Client $client, IndexDocument $document): array {
-        echo("Running indexDocumentNew");
-	    echo("Setting document to " . $document->getSource());
+        echo("Running indexDocumentNew\n");
+
+        echo("creating temporary file.");
+        $tmpfname = tempnam(sys_get_temp_dir(), $document->getTitle());
+        $handle = fopen($tmpfname, "w");
+        fwrite($handle, base64_decode($document->getContent()));
+        fclose($handle);
 
 	    $query = $client->createExtract();
-	    $query->addFieldMapping('content', 'text');
-	    $query->setUprefix('attr_');
-	    $query->setFile($document->getSource());
+//	    $query->addFieldMapping('content', 'text');
+//	    $query->setUprefix('attr_');
+	    $query->setFile($tmpfname);
 	    $query->setCommit(true);
-	    $query->setOmitHeader(false);
+//	    $query->setOmitHeader(false);
+//	    $query->setDocumentClass();
 
 	    $doc = $query->createDocument();
 	    $doc->id = $document->getProviderId() . ":" . $document->getId();
-        $doc->type = 'standard';
-	    $doc->body = $this->generateIndexBody($document);
+//        $doc->type = 'standard';
+//	    $doc->body = $this->generateIndexBody($document);
 
 	    $query->setDocument($doc);
 
@@ -95,21 +106,7 @@ class IndexMappingService {
 
 	    echo("Result: ". implode("|", $result->getData()));
 
-	    return $result->getData();
-
-//		$index = [
-//			'index' =>
-//				[
-//					'index' => $this->configService->getSolrIndex(),
-//					'id'    => $document->getProviderId() . ':' . $document->getId(),
-//					'type'  => 'standard',
-//					'body'  => $this->generateIndexBody($document)
-//				]
-//		];
-//
-//		$this->onIndexingDocument($document, $index);
-//
-//		return $client->index($index['index']);
+        return $result->getData();
 	}
 
 
@@ -217,7 +214,7 @@ class IndexMappingService {
 //		}
 
 //		if ($index->isStatus(IIndex::INDEX_CONTENT)) {
-		$body['content'] = $document->getContent();
+//		$body['content'] = $document->getContent();
 
 //		}
 

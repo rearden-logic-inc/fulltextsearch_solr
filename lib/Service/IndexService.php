@@ -233,6 +233,8 @@ class IndexService {
 //		if ($index->getErrorCount() === 0) {
 //			$index->setStatus(IIndex::INDEX_DONE);
 //		}
+        // Hard code the status to done for now.
+        $index->setStatus(IIndex::INDEX_DONE);
 
 		return $index;
 	}
