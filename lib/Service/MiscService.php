@@ -42,10 +42,8 @@ use OCP\ILogger;
  */
 class MiscService {
 
-
 	/** @var ILogger */
 	private $logger;
-
 
 	/**
 	 * MiscService constructor.
@@ -55,7 +53,6 @@ class MiscService {
 	public function __construct(ILogger $logger) {
 		$this->logger = $logger;
 	}
-
 
 	/**
 	 * @param string $message
@@ -69,6 +66,16 @@ class MiscService {
 
 		$this->logger->log($level, $message, $data);
 	}
+
+	public function debugToFile(string $filePrefix, $variable) {
+        ob_start();
+        var_dump($variable);
+        $result = ob_get_clean();
+
+        $handler = fopen(tempnam(sys_get_temp_dir(), $filePrefix), "w");
+        fwrite($handler, $result);
+        fclose($handler);
+    }
 
 }
 

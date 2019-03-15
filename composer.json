@@ -11,6 +11,7 @@
   ],
   "require": {
     "solarium/solarium": "3.6.0",
-    "daita/my-small-php-tools": "dev-master"
+    "daita/my-small-php-tools": "dev-master",
+    "ext-json": "*"
   }
 }

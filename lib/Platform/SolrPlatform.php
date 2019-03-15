@@ -179,18 +179,18 @@ class SolrPlatform implements IFullTextSearchPlatform {
 	 * @return bool
 	 */
 	public function testPlatform(): bool {
-//        $this->miscService->log("Executing Ping");
-//	    $ping = $this->client->createPing();
+        $this->miscService->log("Executing Ping");
+	    $ping = $this->client->createPing();
 
 	    try {
-//            $this->client->ping($ping);
-//            $this->miscService->log('Ping Successful');
+            $this->client->ping($ping);
+            $this->miscService->log('Ping Successful');
             return true;
         } catch (Exception $e) {
 	        $this->miscService->log('Ping Failed');
 	        $this->miscService->log($e->getTraceAsString());
         }
-        return true;
+        return false;
 	}
 
 
@@ -202,9 +202,7 @@ class SolrPlatform implements IFullTextSearchPlatform {
 	 * @throws ConfigurationException
 	 * @throws BadRequest400Exception
 	 */
-	// TODO
 	public function initializeIndex() {
-//		$this->indexService->initializeIndex($this->client);
         $this->miscService->log("Initializing Index");
 	}
 
@@ -235,7 +233,6 @@ class SolrPlatform implements IFullTextSearchPlatform {
 	 *
 	 * @return IIndex
 	 */
-	// TODO
 	public function indexDocument(IndexDocument $document): IIndex {
 
 	    echo("Asked to index document: ".$document->getId()."\n");
@@ -263,57 +260,18 @@ class SolrPlatform implements IFullTextSearchPlatform {
 			$this->manageIndexErrorException($document, $e);
 		}
 
-//		try {
-//			$result = $this->indexDocumentError($document, $e);
-//			$index = $this->indexService->parseIndexResult($document->getIndex(), $result);
-//
-//			$this->updateNewIndexResult(
-//				$document->getIndex(), json_encode($result), 'ok',
-//				IRunner::RESULT_TYPE_WARNING
-//			);
-//
-//			return $index;
-//		} catch (Exception $e) {
-//			$this->updateNewIndexResult(
-//				$document->getIndex(), '', 'fail',
-//				IRunner::RESULT_TYPE_FAIL
-//			);
-//			$this->manageIndexErrorException($document, $e);
-//		}
+        $this->updateNewIndexResult(
+				$document->getIndex(), '', 'fail',
+				IRunner::RESULT_TYPE_FAIL
+			);
 
 		return $document->getIndex();
 	}
 
-
-	/**
-	 * @param IndexDocument $document
-	 * @param Exception $e
-	 *
-	 * @return array
-	 * @throws AccessIsEmptyException
-	 * @throws ConfigurationException
-	 * @throws \Exception
-	 */
-	// TODO
-	private function indexDocumentError(IndexDocument $document, Exception $e): array {
-
-		$this->updateRunnerAction('indexDocumentWithoutContent', true);
-
-		$document->setContent('');
-//		$index = $document->getIndex();
-//		$index->unsetStatus(Index::INDEX_CONTENT);
-
-		$result = $this->indexService->indexDocument($this->client, $document);
-
-		return $result;
-	}
-
-
 	/**
 	 * @param IndexDocument $document
 	 * @param Exception $e
 	 */
-	//TODO
 	private function manageIndexErrorException(IndexDocument $document, Exception $e) {
 
 		$message = $this->parseIndexErrorException($e);
@@ -350,12 +308,11 @@ class SolrPlatform implements IFullTextSearchPlatform {
 	 * @throws ConfigurationException
 	 */
 	public function deleteIndexes(array $indexes) {
-	    $this->miscService->log("Asked to delete indices");
-//		try {
-//			$this->indexService->deleteIndexes($this->client, $indexes);
-//		} catch (ConfigurationException $e) {
-//			throw $e;
-//		}
+		try {
+			$this->indexService->deleteIndexes($this->client, $indexes);
+		} catch (ConfigurationException $e) {
+			throw $e;
+		}
 	}
 
 
@@ -365,7 +322,7 @@ class SolrPlatform implements IFullTextSearchPlatform {
 	 */
 	public function searchRequest(ISearchResult $result, DocumentAccess $access) {
 	    $this->miscService->log("Search Request");
-//		$this->searchService->searchRequest($this->client, $result, $access);
+		$this->searchService->searchRequest($this->client, $result, $access);
 	}
 
 
@@ -412,22 +369,6 @@ class SolrPlatform implements IFullTextSearchPlatform {
 			throw $e;
 		}
 	}
-
-
-	/**
-	 * @param string $action
-	 * @param bool $force
-	 *
-	 * @throws Exception
-	 */
-	private function updateRunnerAction(string $action, bool $force = false) {
-		if ($this->runner === null) {
-			return;
-		}
-
-		$this->runner->updateAction($action, $force);
-	}
-
 
 	/**
 	 * @param IIndex $index

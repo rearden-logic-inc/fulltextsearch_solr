@@ -97,26 +97,7 @@ class IndexService {
 	 * @throws ConfigurationException
 	 * @throws BadRequest400Exception
 	 */
-	// TODO
 	public function initializeIndex(Client $client) {
-//		try {
-//			if ($client->indices()
-//					   ->exists($this->indexMappingService->generateGlobalMap(false))) {
-//				return;
-//			}
-//		} catch (BadRequest400Exception $e) {
-//			$this->parseBadRequest400($e);
-//		}
-//
-//		try {
-//			$client->indices()
-//				   ->create($this->indexMappingService->generateGlobalMap());
-//			$client->ingest()
-//				   ->putPipeline($this->indexMappingService->generateGlobalIngest());
-//		} catch (BadRequest400Exception $e) {
-//			$this->resetIndexAll($client);
-//			$this->parseBadRequest400($e);
-//		}
 	}
 
 
@@ -169,13 +150,12 @@ class IndexService {
 	 *
 	 * @throws ConfigurationException
 	 */
-	// TODO:
 	public function deleteIndexes(Client $client, array $indexes) {
-//		foreach ($indexes as $index) {
-//			$this->indexMappingService->indexDocumentRemove(
-//				$client, $index->getProviderId(), $index->getDocumentId()
-//			);
-//		}
+		foreach ($indexes as $index) {
+			$this->indexMappingService->indexDocumentRemove(
+				$client, $index->getProviderId(), $index->getDocumentId()
+			);
+		}
 	}
 
 
@@ -191,9 +171,7 @@ class IndexService {
 		$result = [];
 		$index = $document->getIndex();
 		if ($index->isStatus(IIndex::INDEX_REMOVE)) {
-			$this->indexMappingService->indexDocumentRemove(
-				$client, $document->getProviderId(), $document->getId()
-			);
+			$this->indexMappingService->indexDocumentRemove($client, $document->getProviderId(), $document->getId());
 		} else if ($index->isStatus(IIndex::INDEX_OK) && !$index->isStatus(IIndex::INDEX_CONTENT)
 				   && !$index->isStatus(IIndex::INDEX_META)) {
 			$result = $this->indexMappingService->indexDocumentUpdate($client, $document);

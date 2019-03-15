@@ -88,17 +88,11 @@ class IndexMappingService {
         fclose($handle);
 
 	    $query = $client->createExtract();
-//	    $query->addFieldMapping('content', 'text');
-//	    $query->setUprefix('attr_');
 	    $query->setFile($tmpfname);
 	    $query->setCommit(true);
-//	    $query->setOmitHeader(false);
-//	    $query->setDocumentClass();
 
 	    $doc = $query->createDocument();
-	    $doc->id = $document->getProviderId() . ":" . $document->getId();
-//        $doc->type = 'standard';
-//	    $doc->body = $this->generateIndexBody($document);
+	    $doc->id = $this->generateDocumentIdentifier($document->getProviderId(), $document->getId());
 
 	    $query->setDocument($doc);
 
@@ -151,20 +145,24 @@ class IndexMappingService {
 	 * @throws ConfigurationException
 	 */
 	public function indexDocumentRemove(Client $client, string $providerId, string $documentId) {
-		$index = [
-			'index' =>
-				[
-					'index' => $this->configService->getSolrIndex(),
-					'id'    => $providerId . ':' . $documentId,
-					'type'  => 'standard'
-				]
-		];
 
-		try {
-			$client->delete($index['index']);
-		} catch (Missing404Exception $e) {
-		}
+        echo "Removing document " . $providerId . " - " . $documentId . "\n";
+
+        // get an update query instance
+        $update = $client->createUpdate();
+
+        // add the delete id and a commit command to the update query
+        $update->addDeleteById($this->generateDocumentIdentifier($providerId, $documentId));
+        $update->addCommit();
+
+        // this executes the query and returns the result
+        $result = $client->update($update);
+
 	}
+
+	private function generateDocumentIdentifier(string $providerId, string $documentId) {
+	    return $providerId.":".$documentId;
+    }
 
 
 	/**
@@ -213,187 +211,7 @@ class IndexMappingService {
 		];
 //		}
 
-//		if ($index->isStatus(IIndex::INDEX_CONTENT)) {
-//		$body['content'] = $document->getContent();
-
-//		}
-
 		return array_merge($document->getInfoAll(), $body);
-	}
-
-
-	/**
-	 * @param bool $complete
-	 *
-	 * @return array
-	 * @throws ConfigurationException
-	 */
-	public function generateGlobalMap(bool $complete = true): array {
-
-		$params = [
-			'index' => $this->configService->getSolrIndex()
-		];
-
-		if ($complete === false) {
-			return $params;
-		}
-
-		$params['body'] = [
-			'settings' => [
-				'analysis' => [
-					'filter'      => [
-						'shingle' => [
-							'type' => 'shingle'
-						]
-					],
-					'char_filter' => [
-						'pre_negs'  => [
-							'type'        => 'pattern_replace',
-							'pattern'     => '(\\w+)\\s+((?i:never|no|nothing|nowhere|noone|none|not|havent|hasnt|hadnt|cant|couldnt|shouldnt|wont|wouldnt|dont|doesnt|didnt|isnt|arent|aint))\\b',
-							'replacement' => '~$1 $2'
-						],
-						'post_negs' => [
-							'type'        => 'pattern_replace',
-							'pattern'     => '\\b((?i:never|no|nothing|nowhere|noone|none|not|havent|hasnt|hadnt|cant|couldnt|shouldnt|wont|wouldnt|dont|doesnt|didnt|isnt|arent|aint))\\s+(\\w+)',
-							'replacement' => '$1 ~$2'
-						]
-					],
-					'analyzer'    => [
-						'analyzer' => [
-							'type'      => 'custom',
-							'tokenizer' => $this->configService->getAppValue(
-								ConfigService::ANALYZER_TOKENIZER
-							),
-							'filter'    => ['lowercase', 'stop', 'kstem']
-						]
-					]
-				]
-			],
-			'mappings' => [
-				'standard' => [
-					'dynamic'    => true,
-					'properties' => [
-						'source'   => [
-							'type' => 'keyword'
-						],
-						'title'    => [
-							'type'        => 'text',
-							'analyzer'    => 'keyword',
-							'term_vector' => 'yes',
-							'copy_to'     => 'combined'
-						],
-						'provider' => [
-							'type' => 'keyword'
-						],
-						'tags'     => [
-							'type' => 'keyword'
-						],
-						'metatags' => [
-							'type' => 'keyword'
-						],
-						'subtags'  => [
-							'type' => 'keyword'
-						],
-						'content'  => [
-							'type'        => 'text',
-							'analyzer'    => 'analyzer',
-							'term_vector' => 'yes',
-							'copy_to'     => 'combined'
-						],
-						'owner'    => [
-							'type' => 'keyword'
-						],
-						'users'    => [
-							'type' => 'keyword'
-						],
-						'groups'   => [
-							'type' => 'keyword'
-						],
-						'circles'  => [
-							'type' => 'keyword'
-						],
-						'links'    => [
-							'type' => 'keyword'
-						],
-						'hash'     => [
-							'type' => 'keyword'
-						],
-						'combined' => [
-							'type'        => 'text',
-							'analyzer'    => 'analyzer',
-							'term_vector' => 'yes'
-						]
-						//						,
-						//						'topics'   => [
-						//							'type'  => 'text',
-						//							'index' => 'not_analyzed'
-						//						],
-						//						'places'   => [
-						//							'type'  => 'text',
-						//							'index' => 'not_analyzed'
-						//						]
-					]
-				]
-			]
-		];
-
-		return $params;
-	}
-
-
-	/**
-	 * @param bool $complete
-	 *
-	 * @return array
-	 */
-	public function generateGlobalIngest(bool $complete = true): array {
-
-		$params = ['id' => 'attachment'];
-
-		if ($complete === false) {
-			return $params;
-		}
-
-		$params['body'] = [
-			'description' => 'attachment',
-			'processors'  => [
-				[
-					'attachment' => [
-						'field'         => 'content',
-						'indexed_chars' => -1
-					],
-					'convert'    => [
-						'field'        => 'attachment.content',
-						'type'         => 'string',
-						'target_field' => 'content'
-					],
-					'remove'     => [
-						'field'          => 'attachment.content',
-						'ignore_failure' => true
-					]
-				]
-			]
-		];
-
-		return $params;
-	}
-
-
-	/**
-	 * @param string $providerId
-	 *
-	 * @return array
-	 * @throws ConfigurationException
-	 */
-	public function generateDeleteQuery(string $providerId): array {
-		$params = [
-			'index' => $this->configService->getSolrIndex(),
-			'type'  => 'standard'
-		];
-
-		$params['body']['query']['match'] = ['provider' => $providerId];
-
-		return $params;
 	}
 
 }

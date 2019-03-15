@@ -83,30 +83,21 @@ class SearchService {
 	public function searchRequest(
 		Client $client, ISearchResult $searchResult, DocumentAccess $access
 	) {
-//		try {
-//			$query = $this->searchMappingService->generateSearchQuery(
-//				$searchResult->getRequest(), $access, $searchResult->getProvider()
-//																   ->getId()
-//			);
-//		} catch (SearchQueryGenerationException $e) {
-//			return;
-//		}
-//
-//		try {
-//			$result = $client->search($query['params']);
-//		} catch (Exception $e) {
-//			$this->miscService->log(
-//				'debug - request: ' . json_encode($searchResult->getRequest()) . '   - query: '
-//				. json_encode($query)
-//			);
-//			throw $e;
-//		}
-//
-//		$this->updateSearchResult($searchResult, $result);
-//
-//		foreach ($result['hits']['hits'] as $entry) {
-//			$searchResult->addDocument($this->parseSearchEntry($entry, $access->getViewerId()));
-//		}
+
+	    $this->miscService->log("Search result requested.");
+	    $this->miscService->log("Request: " . $searchResult->getRequest()->getSearch());
+	    $this->miscService->log("Provider: ". $searchResult->getProvider()->getId());
+
+	    $selectQuery = $client->createSelect();
+
+	    $selectQuery->setQuery($searchResult->getRequest()->getSearch());
+
+	    $resultSet = $client->execute($selectQuery);
+
+        $this->miscService->debugToFile("searchResultSet", $resultSet);
+
+        $this->updateSearchResult($searchResult, $access, $resultSet->getResponse()->getBody());
+
 	}
 
 
@@ -195,13 +186,21 @@ class SearchService {
 	 * @param ISearchResult $searchResult
 	 * @param array $result
 	 */
-	private function updateSearchResult(ISearchResult $searchResult, array $result) {
-		$searchResult->setRawResult(json_encode($result));
+	private function updateSearchResult(ISearchResult $searchResult, DocumentAccess $access, string $result) {
+		$searchResult->setRawResult($result);
 
-		$searchResult->setTotal($result['hits']['total']);
-		$searchResult->setMaxScore($this->getInt('max_score', $result['hits'], 0));
-		$searchResult->setTime($result['took']);
-		$searchResult->setTimedOut($result['timed_out']);
+		$result = json_decode($result);
+
+		$this->miscService->debugToFile('result_decoded', $result);
+
+		$searchResult->setTotal($result->response->numFound);
+		$searchResult->setMaxScore(intval($result->response->maxScore * 100));  // 100 is arbitrary
+		$searchResult->setTime(1);   // Don't have a means of fetching this value yet. value is milliseconds
+		$searchResult->setTimedOut(false);
+
+   		foreach ($result->response->docs as $entry) {
+			$searchResult->addDocument($this->parseSearchEntry($entry, $access->getViewerId()));
+		}
 	}
 
 
@@ -211,23 +210,28 @@ class SearchService {
 	 *
 	 * @return IndexDocument
 	 */
-	private function parseSearchEntry(array $entry, string $viewerId): IndexDocument {
+	private function parseSearchEntry(object $entry, string $viewerId): IndexDocument {
 		$access = new DocumentAccess();
 		$access->setViewerId($viewerId);
 
-		list($providerId, $documentId) = explode(':', $entry['_id'], 2);
+		list($providerId, $documentId) = explode(':', $entry->id, 2);
 		$document = new IndexDocument($providerId, $documentId);
 		$document->setAccess($access);
-		$document->setHash($this->get('hash', $entry['_source']));
-		$document->setScore($this->get('_score', $entry, '0'));
-		$document->setSource($this->get('source', $entry['_source']));
-		$document->setTitle($this->get('title', $entry['_source']));
+		$document->setHash('Unknown');  // TODO: Save off the hash some where.
+		$document->setScore(strval(intval($entry->score * 100)));
+		$document->setSource('Unknown');  // TODO: Save off the source when storing document
+        if ($entry->title != null) {
+            $document->setTitle($entry->title[0]);
+        } else {
+            $document->setTitle('Unknown Document Title');
+        }
 
-		$document->setExcerpts(
-			$this->parseSearchEntryExcerpts(
-				(array_key_exists('highlight', $entry)) ? $entry['highlight'] : []
-			)
-		);
+        // TODO: Figure out highlighting
+//		$document->setExcerpts(
+//			$this->parseSearchEntryExcerpts(
+//				(array_key_exists('highlight', $entry)) ? $entry['highlight'] : []
+//			)
+//		);
 
 		return $document;
 	}
