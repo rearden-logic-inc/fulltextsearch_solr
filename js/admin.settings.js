@@ -1,11 +1,12 @@
 /*
- * FullTextSearch_ElasticSearch - Use Elasticsearch to index the content of your nextcloud
+ * FullTextSearch_Solr - Use Solr to index the content of your nextcloud
  *
  * This file is licensed under the Affero General Public License version 3 or
  * later. See the COPYING file.
  *
  * @author Maxence Lange <maxence@artificial-owl.com>
- * @copyright 2018
+ * @author Robert Robinson <rerobins@gmail.com>
+ * @copyright 2019
  * @license GNU AGPL version 3 or any later version
  *
  * This program is free software: you can redistribute it and/or modify
@@ -48,9 +49,8 @@ var solr_settings = {
 	/** @namespace result.analyzer_tokenizer */
 	updateSettingPage: function (result) {
 
-		solr_elements.solr_host.val(result.solr_host);
-		solr_elements.solr_index.val(result.solr_index);
-		solr_elements.analyzer_tokenizer.val(result.analyzer_tokenizer);
+		solr_elements.solr_servlet.val(result.solr_servlet);
+		solr_elements.solr_core.val(result.solr_core);
 
 		fts_admin_settings.tagSettingsAsSaved(solr_elements.solr_div);
 	},
@@ -59,9 +59,8 @@ var solr_settings = {
 	saveSettings: function () {
 
 		var data = {
-			solr_host: solr_elements.solr_host.val(),
-			solr_index: solr_elements.solr_index.val(),
-			analyzer_tokenizer: solr_elements.analyzer_tokenizer.val()
+			solr_servlet: solr_elements.solr_servlet.val(),
+			solr_core: solr_elements.solr_core.val()
 		};
 
 		$.ajax({

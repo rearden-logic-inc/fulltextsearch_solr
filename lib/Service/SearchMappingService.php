@@ -3,13 +3,14 @@ declare(strict_types=1);
 
 
 /**
- * FullTextSearch_ElasticSearch - Use Elasticsearch to index the content of your nextcloud
+ * FullTextSearch_Solr - Use Solr to index the content of your nextcloud
  *
  * This file is licensed under the Affero General Public License version 3 or
  * later. See the COPYING file.
  *
  * @author Maxence Lange <maxence@artificial-owl.com>
- * @copyright 2018
+ * @author Robert Robinson <rerobins@gmail.com>
+ * @copyright 2019
  * @license GNU AGPL version 3 or any later version
  *
  * This program is free software: you can redistribute it and/or modify
@@ -96,7 +97,7 @@ class SearchMappingService {
 		ISearchRequest $request, DocumentAccess $access, string $providerId
 	): array {
 		$params = [
-			'index' => $this->configService->getSolrIndex(),
+			'index' => $this->configService->getSolrCore(),
 			'type'  => 'standard',
 			'size'  => $request->getSize(),
 			'from'  => (($request->getPage() - 1) * $request->getSize())
@@ -393,7 +394,7 @@ class SearchMappingService {
 	 */
 	public function getDocumentQuery(string $providerId, string $documentId): array {
 		return [
-			'index' => $this->configService->getSolrIndex(),
+			'index' => $this->configService->getSolrCore(),
 			'type'  => 'standard',
 			'id'    => $providerId . ':' . $documentId
 		];

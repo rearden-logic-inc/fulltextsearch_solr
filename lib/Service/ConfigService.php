@@ -3,13 +3,14 @@ declare(strict_types=1);
 
 
 /**
- * FullTextSearch_ElasticSearch - Use Elasticsearch to index the content of your nextcloud
+ * FullTextSearch_Solr - Use Solr to index the content of your nextcloud
  *
  * This file is licensed under the Affero General Public License version 3 or
  * later. See the COPYING file.
  *
  * @author Maxence Lange <maxence@artificial-owl.com>
- * @copyright 2018
+ * @author Robert Robinson <rerobins@gmail.com>
+ * @copyright 2019
  * @license GNU AGPL version 3 or any later version
  *
  * This program is free software: you can redistribute it and/or modify
@@ -45,15 +46,13 @@ use OCP\PreConditionNotMetException;
 class ConfigService {
 
 
-	const SOLR_HOST = 'solr_host';
-	const SOLR_INDEX = 'solr_index';
-	const ANALYZER_TOKENIZER = 'analyzer_tokenizer';
+	const SOLR_SERVLET = 'solr_servlet';
+	const SOLR_CORE = 'solr_core';
 
 
 	public $defaults = [
-		self::SOLR_HOST       => '',
-		self::SOLR_INDEX      => '',
-		self::ANALYZER_TOKENIZER => 'standard'
+		self::SOLR_SERVLET   => 'http://localhost:8983/solr/',
+		self::SOLR_CORE      => 'nextcloud'
 	];
 
 	/** @var IConfig */
@@ -110,21 +109,19 @@ class ConfigService {
 
 
 	/**
-	 * @return array
+	 * @return string
 	 * @throws ConfigurationException
 	 */
-	public function getSolrHost(): array {
+	public function getSolrServlet(): string {
 
-		$strHost = $this->getAppValue(self::SOLR_HOST);
+		$strHost = $this->getAppValue(self::SOLR_SERVLET);
 		if ($strHost === '') {
 			throw new ConfigurationException(
 				'Your Solr Platform is not configured properly'
 			);
 		}
 
-		$hosts = explode(',', $strHost);
-
-		return array_map('trim', $hosts);
+		return trim($strHost);
 	}
 
 
@@ -132,9 +129,9 @@ class ConfigService {
 	 * @return string
 	 * @throws ConfigurationException
 	 */
-	public function getSolrIndex(): string {
+	public function getSolrCore(): string {
 
-		$index = $this->getAppValue(self::SOLR_INDEX);
+		$index = $this->getAppValue(self::SOLR_CORE);
 		if ($index === '') {
 			throw new ConfigurationException(
 				'Your Solr Platform is not configured properly'

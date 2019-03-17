@@ -1,11 +1,12 @@
 /*
- * FullTextSearch_ElasticSearch - Use Elasticsearch to index the content of your nextcloud
+ * FullTextSearch_Solr - Use Solr to index the content of your nextcloud
  *
  * This file is licensed under the Affero General Public License version 3 or
  * later. See the COPYING file.
  *
  * @author Maxence Lange <maxence@artificial-owl.com>
- * @copyright 2018
+ * @author Robert Robinson <rerobins@gmail.com>
+ * @copyright 2019
  * @license GNU AGPL version 3 or any later version
  *
  * This program is free software: you can redistribute it and/or modify
@@ -33,34 +34,26 @@ var solr_elements = {
 
 	// These are the divs that are used to display and retrieve the values of the configuration.
 	solr_div: null,
-	solr_host: null,
-	solr_index: null,
-	analyzer_tokenizer: null,
-
+	solr_servlet: null,
+	solr_core: null,
 
 	init: function () {
 		solr_elements.solr_div = $('#solr');
-		solr_elements.solr_host = $('#solr_host');
-		solr_elements.solr_index = $('#solr_index');
-		solr_elements.analyzer_tokenizer = $('#analyzer_tokenizer');
+		solr_elements.solr_servlet = $('#solr_servlet');
+		solr_elements.solr_core = $('#solr_core');
 
-		solr_elements.solr_host.on('input', function () {
+		solr_elements.solr_servlet.on('input', function () {
 			fts_admin_settings.tagSettingsAsNotSaved($(this));
 		}).blur(function () {
 			solr_settings.saveSettings();
 		});
 
-		solr_elements.solr_index.on('input', function () {
+		solr_elements.solr_core.on('input', function () {
 			fts_admin_settings.tagSettingsAsNotSaved($(this));
 		}).blur(function () {
 			solr_settings.saveSettings();
 		});
 
-		solr_elements.analyzer_tokenizer.on('input', function () {
-			fts_admin_settings.tagSettingsAsNotSaved($(this));
-		}).blur(function () {
-			solr_settings.saveSettings();
-		});
 	}
 
 };

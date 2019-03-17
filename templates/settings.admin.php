@@ -3,13 +3,14 @@ declare(strict_types=1);
 
 
 /**
- * FullTextSearch_ElasticSearch - Use Elasticsearch to index the content of your nextcloud
+ * FullTextSearch_Solr - Use Solr to index the content of your nextcloud
  *
  * This file is licensed under the Affero General Public License version 3 or
  * later. See the COPYING file.
  *
  * @author Maxence Lange <maxence@artificial-owl.com>
- * @copyright 2018
+ * @author Robert Robinson <rerobins@gmail.com>
+ * @copyright 2019
  * @license GNU AGPL version 3 or any later version
  *
  * This program is free software: you can redistribute it and/or modify
@@ -53,33 +54,20 @@ Util::addStyle(Application::APP_NAME, 'admin');
 				<em><?php p($l->t('Include your credential in case authentication is required.')); ?></em>
 			</div>
 			<div class="div-table-col">
-				<input type="text" id="solr_host"
-					   placeholder="http://username:password@localhost:8983/"/>
+				<input type="text" id="solr_servlet" placeholder="http://localhost:8983/solr/"/>
 			</div>
 		</div>
 
 		<div class="div-table-row">
 			<div class="div-table-col div-table-col-left">
-				<span class="leftcol"><?php p($l->t('Index')); ?>:</span>
+				<span class="leftcol"><?php p($l->t('Core')); ?>:</span>
 				<br/>
-				<em><?php p($l->t('Name of your index.')); ?></em>
+				<em><?php p($l->t('Name of your core.')); ?></em>
 			</div>
 			<div class="div-table-col">
-				<input type="text" id="solr_index" placeholder="my_index"/>
+				<input type="text" id="solr_core" placeholder="nextcloud"/>
 			</div>
 		</div>
-
-		<div class="div-table-row">
-			<div class="div-table-col div-table-col-left">
-				<span class="leftcol"><?php p($l->t('[Advanced] Analyzer tokenizer')); ?>:</span>
-				<br/>
-				<em><?php p($l->t('Some language might needs a specific tokenizer.')); ?></em>
-			</div>
-			<div class="div-table-col">
-				<input type="text" id="analyzer_tokenizer" />
-			</div>
-		</div>
-
 
 	</div>
 

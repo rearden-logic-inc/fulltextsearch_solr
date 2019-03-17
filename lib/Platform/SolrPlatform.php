@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 
 /**
- * FullTextSearch_ElasticSearch - Use Elasticsearch to index the content of your nextcloud
+ * FullTextSearch_Solr - Use Solr to index the content of your nextcloud
  *
  * This file is licensed under the Affero General Public License version 3 or
  * later. See the COPYING file.
@@ -125,7 +125,7 @@ class SolrPlatform implements IFullTextSearchPlatform {
 	public function getConfiguration(): array {
 
 		$result = [];
-		$hosts = $this->configService->getSolrHost();
+		$hosts = $this->configService->getSolrServlet();
 
 		foreach ($hosts as $host) {
 			$parsedHost = parse_url($host);
@@ -140,8 +140,8 @@ class SolrPlatform implements IFullTextSearchPlatform {
 		}
 
 		return [
-			'solr_host'  => $result,
-			'solr_index' => $this->configService->getSolrIndex()
+			'solr_servlet'  => $result,
+			'solr_core' => $this->configService->getSolrCore()
 		];
 	}
 
@@ -166,7 +166,7 @@ class SolrPlatform implements IFullTextSearchPlatform {
 	public function loadPlatform() {
 	    $this->miscService->log("Loading solarium platform", 2);
 		try {
-			$this->connect($this->configService->getSolrHost());
+			$this->connect($this->configService->getSolrServlet());
 		} catch (ConfigurationException $e) {
 			throw $e;
 		}
@@ -339,32 +339,31 @@ class SolrPlatform implements IFullTextSearchPlatform {
         return null;
 	}
 
-
-	private function cleanHost($host) {
-		return $this->withoutEndSlash($host, false, false);
-	}
-
 	/**
-	 * @param array $hosts
 	 *
 	 * @throws Exception
 	 */
-	private function connect(array $hosts) {
+	private function connect() {
 
 		try {
-		    // TODO: Configure this correctly to use the values that are stored in the configuration details
+            $url_components = parse_url($this->configService->getSolrServlet());
+
+            $port = 8983;
+            if (array_key_exists('port', $url_components)) {
+                $port = $url_components['port'];
+            }
+
 			$config = array(
                 'endpoint' => array(
                     'solr' => array(
-                        'host' => 'solr',
-                        'port' => 8983,
-                        'path' => '/solr/',
-                        'core' => 'mycore',  // This is probably the index value
+                        'host' => $url_components['host'],
+                        'port' => $port,
+                        'path' => $url_components['path'],
+                        'core' => $this->configService->getSolrCore(),
                     )
                 )
             );
 			$this->client = new Client($config);
-//			$this->client->setAdapter('Solarium\Core\Client\Adapter\PeclHttp');
 		} catch (Exception $e) {
 			throw $e;
 		}
