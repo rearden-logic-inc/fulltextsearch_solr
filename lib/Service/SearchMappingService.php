@@ -38,6 +38,7 @@ use OCA\FullTextSearch_Solr\Exceptions\SearchQueryGenerationException;
 use OCA\FullTextSearch_Solr\Model\QueryContent;
 use OCP\FullTextSearch\Model\DocumentAccess;
 use OCP\FullTextSearch\Model\ISearchRequest;
+use OCP\ILogger;
 
 
 /**
@@ -47,91 +48,103 @@ use OCP\FullTextSearch\Model\ISearchRequest;
  */
 class SearchMappingService {
 
-	/** @var ConfigService */
-	private $configService;
+    /** @var ConfigService */
+    private $configService;
 
-	/** @var MiscService */
-	private $miscService;
+    /** @var ILogger */
+    private $logger;
 
-
-	/**
-	 * SearchMappingService constructor.
-	 *
-	 * @param ConfigService $configService
-	 * @param MiscService $miscService
-	 */
-	public function __construct(ConfigService $configService, MiscService $miscService) {
-		$this->configService = $configService;
-		$this->miscService = $miscService;
-	}
-
-
-	/**
-	 * @param ISearchRequest $request
-	 * @param DocumentAccess $access
-	 * @param string $providerId
-	 *
-	 * @return array
-	 * @throws ConfigurationException
-	 * @throws SearchQueryGenerationException
-	 */
-	public function generateSearchQuery(
-		ISearchRequest $request, DocumentAccess $access, string $providerId
-	): array {
-		$query['params'] = $this->generateSearchQueryParams($request, $access, $providerId);
-
-		return $query;
-	}
+    /**
+     * SearchMappingService constructor.
+     *
+     * @param ConfigService $configService
+     * @param ILogger $logger
+     */
+    public function __construct(ConfigService $configService, ILogger $logger) {
+        $this->configService = $configService;
+        $this->logger = $logger;
+    }
 
 
-	/**
-	 * @param ISearchRequest $request
-	 * @param DocumentAccess $access
-	 * @param string $providerId
-	 *
-	 * @return array
-	 * @throws ConfigurationException
-	 * @throws SearchQueryGenerationException
-	 */
-	public function generateSearchQueryParams(
-		ISearchRequest $request, DocumentAccess $access, string $providerId
-	): array {
-		$params = [
-			'index' => $this->configService->getSolrCore(),
-			'type'  => 'standard',
-			'size'  => $request->getSize(),
-			'from'  => (($request->getPage() - 1) * $request->getSize())
-		];
+    /**
+     * @param ISearchRequest $request
+     * @param DocumentAccess $access
+     * @param string $providerId
+     *
+     * @return array
+     * @throws ConfigurationException
+     * @throws SearchQueryGenerationException
+     */
+    public function generateSearchQuery(ISearchRequest $request, DocumentAccess $access, string $providerId): array {
+        $query['params'] = $this->generateSearchQueryParams($request, $access, $providerId);
 
-		$bool = [];
-		$bool['must']['bool']['should'] = $this->generateSearchQueryContent($request);
+        return $query;
+    }
 
-		$bool['filter'][]['bool']['must'] = ['term' => ['provider' => $providerId]];
-		$bool['filter'][]['bool']['should'] = $this->generateSearchQueryAccess($access);
-		$bool['filter'][]['bool']['should'] =
-			$this->generateSearchQueryTags('metatags', $request->getMetaTags());
-		$bool['filter'][]['bool']['should'] =
-			$this->generateSearchQueryTags('subtags', $request->getSubTags(true));
+
+    /**
+     * @param ISearchRequest $request
+     * @param DocumentAccess $access
+     * @param string $providerId
+     *
+     * @return array
+     * @throws ConfigurationException
+     * @throws SearchQueryGenerationException
+     */
+    public function generateSearchQueryParams(
+        ISearchRequest $request, DocumentAccess $access, string $providerId
+    ): array {
+        $params = [
+            'index' => $this->configService->getSolrCore(),
+            'type' => 'standard',
+            'size' => $request->getSize(),
+            'from' => (($request->getPage() - 1) * $request->getSize())
+        ];
+
+        $bool = [];
+        $bool['must']['bool']['should'] = $this->generateSearchQueryContent($request);
+
+        $bool['filter'][]['bool']['must'] = ['term' => ['provider' => $providerId]];
+        $bool['filter'][]['bool']['should'] = $this->generateSearchQueryAccess($access);
+        $bool['filter'][]['bool']['should'] =
+            $this->generateSearchQueryTags('metatags', $request->getMetaTags());
+        $bool['filter'][]['bool']['should'] =
+            $this->generateSearchQueryTags('subtags', $request->getSubTags(true));
 //		$bool['filter'][]['bool']['should'] = $this->generateSearchQueryTags($request->getTags());
 
-		$params['body']['query']['bool'] = $bool;
-		$params['body']['highlight'] = $this->generateSearchHighlighting($request);
+        $params['body']['query']['bool'] = $bool;
+        $params['body']['highlight'] = $this->generateSearchHighlighting($request);
 
-		$this->improveSearchQuerying($request, $params['body']['query']);
+        $this->improveSearchQuerying($request, $params['body']['query']);
 
-		return $params;
-	}
+        return $params;
+    }
 
+    /**
+     * @param ISearchRequest $request
+     *
+     * @return array
+     * @throws SearchQueryGenerationException
+     */
+    private function generateSearchQueryContent(ISearchRequest $request): array {
+        $str = strtolower($request->getSearch());
 
-	/**
-	 * @param ISearchRequest $request
-	 * @param array $arr
-	 */
-	private function improveSearchQuerying(ISearchRequest $request, array &$arr) {
-//		$this->improveSearchWildcardQueries($request, $arr);
-		$this->improveSearchWildcardFilters($request, $arr);
-		$this->improveSearchRegexFilters($request, $arr);
-	}
+        preg_match_all('/[^?]"(?:\\\\.|[^\\\\"])*"|\S+/', " $str ", $words);
+        $queryContent = [];
+        foreach ($words[0] as $word) {
+            try {
+                $queryContent[] = $this->generateQueryContent(trim($word));
+            } catch (QueryContentGenerationException $e) {
+                continue;
+            }
+        }
+
+        if (sizeof($queryContent) === 0) {
+            throw new SearchQueryGenerationException();
+        }
+
+        return $this->generateSearchQueryFromQueryContent($request, $queryContent);
+    }
 
 
 //	/**
@@ -152,267 +165,239 @@ class SearchMappingService {
 //
 //	}
 
+    /**
+     * @param string $word
+     *
+     * @return QueryContent
+     * @throws QueryContentGenerationException
+     */
+    private function generateQueryContent(string $word): QueryContent {
 
-	/**
-	 * @param ISearchRequest $request
-	 * @param array $arr
-	 */
-	private function improveSearchWildcardFilters(ISearchRequest $request, array &$arr) {
+        $searchQueryContent = new QueryContent($word);
+        if (strlen($searchQueryContent->getWord()) === 0) {
+            throw new QueryContentGenerationException();
+        }
 
-		$filters = $request->getWildcardFilters();
-		foreach ($filters as $filter) {
-			$wildcards = [];
-			foreach ($filter as $entry) {
-				$wildcards[] = ['wildcard' => $entry];
-			}
+        return $searchQueryContent;
+    }
 
-			$arr['bool']['filter'][]['bool']['should'] = $wildcards;
-		}
+    /**
+     * @param ISearchRequest $request
+     * @param QueryContent[] $queryContents
+     *
+     * @return array
+     */
+    private function generateSearchQueryFromQueryContent(
+        ISearchRequest $request, array $queryContents
+    ): array {
 
-	}
+        $query = $queryWords = [];
+        foreach ($queryContents as $queryContent) {
+            $queryWords[$queryContent->getShould()][] =
+                $this->generateQueryContentFields($request, $queryContent);
+        }
 
+        $listShould = array_keys($queryWords);
+        foreach ($listShould as $itemShould) {
+            $query[$itemShould][] = $queryWords[$itemShould];
+        }
 
-	/**
-	 * @param ISearchRequest $request
-	 * @param array $arr
-	 */
-	private function improveSearchRegexFilters(ISearchRequest $request, array &$arr) {
+        return ['bool' => $query];
+    }
 
-		$filters = $request->getRegexFilters();
-		foreach ($filters as $filter) {
-			$regex = [];
-			foreach ($filter as $entry) {
-				$regex[] = ['regexp' => $entry];
-			}
+    /**
+     * @param ISearchRequest $request
+     * @param QueryContent $content
+     *
+     * @return array
+     */
+    private function generateQueryContentFields(ISearchRequest $request, QueryContent $content
+    ): array {
+        $queryFields = [];
 
-			$arr['bool']['filter'][]['bool']['should'] = $regex;
-		}
+        $fields = array_merge(['content', 'title'], $request->getFields());
+        foreach ($fields as $field) {
+            if (!$this->fieldIsOutLimit($request, $field)) {
+                $queryFields[] = [$content->getMatch() => [$field => $content->getWord()]];
+            }
+        }
 
-	}
+        foreach ($request->getWildcardFields() as $field) {
+            if (!$this->fieldIsOutLimit($request, $field)) {
+                $queryFields[] = ['wildcard' => [$field => '*' . $content->getWord() . '*']];
+            }
+        }
 
+        $parts = [];
+        foreach ($this->getPartsFields($request) as $field) {
+            if (!$this->fieldIsOutLimit($request, $field)) {
+                $parts[] = $field;
+            }
+        }
 
-	/**
-	 * @param ISearchRequest $request
-	 *
-	 * @return array
-	 * @throws SearchQueryGenerationException
-	 */
-	private function generateSearchQueryContent(ISearchRequest $request): array {
-		$str = strtolower($request->getSearch());
+        if (sizeof($parts) > 0) {
+            $queryFields[] = [
+                'query_string' => [
+                    'fields' => $parts,
+                    'query' => $content->getWord()
+                ]
+            ];
+        }
 
-		preg_match_all('/[^?]"(?:\\\\.|[^\\\\"])*"|\S+/', " $str ", $words);
-		$queryContent = [];
-		foreach ($words[0] as $word) {
-			try {
-				$queryContent[] = $this->generateQueryContent(trim($word));
-			} catch (QueryContentGenerationException $e) {
-				continue;
-			}
-		}
+        return ['bool' => ['should' => $queryFields]];
+    }
 
-		if (sizeof($queryContent) === 0) {
-			throw new SearchQueryGenerationException();
-		}
+    /**
+     * @param ISearchRequest $request
+     * @param string $field
+     *
+     * @return bool
+     */
+    private function fieldIsOutLimit(ISearchRequest $request, string $field): bool {
+        $limit = $request->getLimitFields();
+        if (sizeof($limit) === 0) {
+            return false;
+        }
 
-		return $this->generateSearchQueryFromQueryContent($request, $queryContent);
-	}
+        if (in_array($field, $limit)) {
+            return false;
+        }
 
+        return true;
+    }
 
-	/**
-	 * @param string $word
-	 *
-	 * @return QueryContent
-	 * @throws QueryContentGenerationException
-	 */
-	private function generateQueryContent(string $word): QueryContent {
+    /**
+     * @param ISearchRequest $request
+     *
+     * @return array
+     */
+    private function getPartsFields(ISearchRequest $request) {
+        return array_map(
+            function ($value) {
+                return 'parts.' . $value;
+            }, $request->getParts()
+        );
+    }
 
-		$searchQueryContent = new QueryContent($word);
-		if (strlen($searchQueryContent->getWord()) === 0) {
-			throw new QueryContentGenerationException();
-		}
+    /**
+     * @param DocumentAccess $access
+     *
+     * @return array
+     */
+    private function generateSearchQueryAccess(DocumentAccess $access): array {
 
-		return $searchQueryContent;
-	}
+        $query = [];
+        $query[] = ['term' => ['owner' => $access->getViewerId()]];
+        $query[] = ['term' => ['users' => $access->getViewerId()]];
+        $query[] = ['term' => ['users' => '__all']];
 
+        foreach ($access->getGroups() as $group) {
+            $query[] = ['term' => ['groups' => $group]];
+        }
 
-	/**
-	 * @param ISearchRequest $request
-	 * @param QueryContent[] $queryContents
-	 *
-	 * @return array
-	 */
-	private function generateSearchQueryFromQueryContent(
-		ISearchRequest $request, array $queryContents
-	): array {
+        foreach ($access->getCircles() as $circle) {
+            $query[] = ['term' => ['circles' => $circle]];
+        }
 
-		$query = $queryWords = [];
-		foreach ($queryContents as $queryContent) {
-			$queryWords[$queryContent->getShould()][] =
-				$this->generateQueryContentFields($request, $queryContent);
-		}
+        return $query;
+    }
 
-		$listShould = array_keys($queryWords);
-		foreach ($listShould as $itemShould) {
-			$query[$itemShould][] = $queryWords[$itemShould];
-		}
+    /**
+     * @param string $k
+     * @param array $tags
+     *
+     * @return array
+     */
+    private function generateSearchQueryTags(string $k, array $tags): array {
 
-		return ['bool' => $query];
-	}
+        $query = [];
+        foreach ($tags as $t) {
+            $query[] = ['term' => [$k => $t]];
+        }
 
+        return $query;
+    }
 
-	/**
-	 * @param ISearchRequest $request
-	 * @param QueryContent $content
-	 *
-	 * @return array
-	 */
-	private function generateQueryContentFields(ISearchRequest $request, QueryContent $content
-	): array {
-		$queryFields = [];
+    /**
+     * @param ISearchRequest $request
+     *
+     * @return array
+     */
+    private function generateSearchHighlighting(ISearchRequest $request): array {
 
-		$fields = array_merge(['content', 'title'], $request->getFields());
-		foreach ($fields as $field) {
-			if (!$this->fieldIsOutLimit($request, $field)) {
-				$queryFields[] = [$content->getMatch() => [$field => $content->getWord()]];
-			}
-		}
+        $parts = $this->getPartsFields($request);
+        $fields = ['content' => new \stdClass()];
+        foreach ($parts as $part) {
+            $fields[$part] = new \stdClass();
+        }
 
-		foreach ($request->getWildcardFields() as $field) {
-			if (!$this->fieldIsOutLimit($request, $field)) {
-				$queryFields[] = ['wildcard' => [$field => '*' . $content->getWord() . '*']];
-			}
-		}
+        return [
+            'fields' => $fields,
+            'pre_tags' => [''],
+            'post_tags' => ['']
+        ];
+    }
 
-		$parts = [];
-		foreach ($this->getPartsFields($request) as $field) {
-			if (!$this->fieldIsOutLimit($request, $field)) {
-				$parts[] = $field;
-			}
-		}
+    /**
+     * @param ISearchRequest $request
+     * @param array $arr
+     */
+    private function improveSearchQuerying(ISearchRequest $request, array &$arr) {
+//		$this->improveSearchWildcardQueries($request, $arr);
+        $this->improveSearchWildcardFilters($request, $arr);
+        $this->improveSearchRegexFilters($request, $arr);
+    }
 
-		if (sizeof($parts) > 0) {
-			$queryFields[] = [
-				'query_string' => [
-					'fields' => $parts,
-					'query'  => $content->getWord()
-				]
-			];
-		}
+    /**
+     * @param ISearchRequest $request
+     * @param array $arr
+     */
+    private function improveSearchWildcardFilters(ISearchRequest $request, array &$arr) {
 
-		return ['bool' => ['should' => $queryFields]];
-	}
+        $filters = $request->getWildcardFilters();
+        foreach ($filters as $filter) {
+            $wildcards = [];
+            foreach ($filter as $entry) {
+                $wildcards[] = ['wildcard' => $entry];
+            }
 
+            $arr['bool']['filter'][]['bool']['should'] = $wildcards;
+        }
 
-	/**
-	 * @param DocumentAccess $access
-	 *
-	 * @return array
-	 */
-	private function generateSearchQueryAccess(DocumentAccess $access): array {
+    }
 
-		$query = [];
-		$query[] = ['term' => ['owner' => $access->getViewerId()]];
-		$query[] = ['term' => ['users' => $access->getViewerId()]];
-		$query[] = ['term' => ['users' => '__all']];
+    /**
+     * @param ISearchRequest $request
+     * @param array $arr
+     */
+    private function improveSearchRegexFilters(ISearchRequest $request, array &$arr) {
 
-		foreach ($access->getGroups() as $group) {
-			$query[] = ['term' => ['groups' => $group]];
-		}
+        $filters = $request->getRegexFilters();
+        foreach ($filters as $filter) {
+            $regex = [];
+            foreach ($filter as $entry) {
+                $regex[] = ['regexp' => $entry];
+            }
 
-		foreach ($access->getCircles() as $circle) {
-			$query[] = ['term' => ['circles' => $circle]];
-		}
+            $arr['bool']['filter'][]['bool']['should'] = $regex;
+        }
 
-		return $query;
-	}
+    }
 
-
-	/**
-	 * @param ISearchRequest $request
-	 * @param string $field
-	 *
-	 * @return bool
-	 */
-	private function fieldIsOutLimit(ISearchRequest $request, string $field): bool {
-		$limit = $request->getLimitFields();
-		if (sizeof($limit) === 0) {
-			return false;
-		}
-
-		if (in_array($field, $limit)) {
-			return false;
-		}
-
-		return true;
-	}
-
-
-	/**
-	 * @param string $k
-	 * @param array $tags
-	 *
-	 * @return array
-	 */
-	private function generateSearchQueryTags(string $k, array $tags): array {
-
-		$query = [];
-		foreach ($tags as $t) {
-			$query[] = ['term' => [$k => $t]];
-		}
-
-		return $query;
-	}
-
-
-	/**
-	 * @param ISearchRequest $request
-	 *
-	 * @return array
-	 */
-	private function generateSearchHighlighting(ISearchRequest $request): array {
-
-		$parts = $this->getPartsFields($request);
-		$fields = ['content' => new \stdClass()];
-		foreach ($parts as $part) {
-			$fields[$part] = new \stdClass();
-		}
-
-		return [
-			'fields'    => $fields,
-			'pre_tags'  => [''],
-			'post_tags' => ['']
-		];
-	}
-
-
-	/**
-	 * @param string $providerId
-	 * @param string $documentId
-	 *
-	 * @return array
-	 * @throws ConfigurationException
-	 */
-	public function getDocumentQuery(string $providerId, string $documentId): array {
-		return [
-			'index' => $this->configService->getSolrCore(),
-			'type'  => 'standard',
-			'id'    => $providerId . ':' . $documentId
-		];
-	}
-
-
-	/**
-	 * @param ISearchRequest $request
-	 *
-	 * @return array
-	 */
-	private function getPartsFields(ISearchRequest $request) {
-		return array_map(
-			function($value) {
-				return 'parts.' . $value;
-			}, $request->getParts()
-		);
-	}
+    /**
+     * @param string $providerId
+     * @param string $documentId
+     *
+     * @return array
+     * @throws ConfigurationException
+     */
+    public function getDocumentQuery(string $providerId, string $documentId): array {
+        return [
+            'index' => $this->configService->getSolrCore(),
+            'type' => 'standard',
+            'id' => $providerId . ':' . $documentId
+        ];
+    }
 
 }
 

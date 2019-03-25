@@ -33,9 +33,9 @@ namespace OCA\FullTextSearch_Solr\Service;
 
 
 use OCA\FullTextSearch_Solr\Exceptions\AccessIsEmptyException;
-use OCA\FullTextSearch_Solr\Exceptions\ConfigurationException;
 use OCP\Files\IRootFolder;
 use OCP\FullTextSearch\Model\IndexDocument;
+use OCP\ILogger;
 use Solarium\Client;
 
 
@@ -47,27 +47,27 @@ use Solarium\Client;
 class IndexMappingService {
 
 
-	/** @var ConfigService */
-	private $configService;
+    /** @var ConfigService */
+    private $configService;
 
-	/** @var MiscService */
-	private $miscService;
+    /** @var IRootFolder */
+    private $rootFolder;
 
-	/** @var IRootFolder */
-	private $rootFolder;
+    /** @var ILogger */
+    private $logger;
 
-
-	/**
-	 * IndexMappingService constructor.
-	 *
-	 * @param ConfigService $configService
-	 * @param MiscService $miscService
-	 */
-	public function __construct(ConfigService $configService, MiscService $miscService, IRootFolder $rootFolder) {
-		$this->configService = $configService;
-		$this->miscService = $miscService;
-		$this->rootFolder = $rootFolder;
-	}
+    /**
+     * IndexMappingService constructor.
+     *
+     * @param ConfigService $configService
+     * @param IRootFolder $rootFolder
+     * @param ILogger $logger
+     */
+    public function __construct(ConfigService $configService, IRootFolder $rootFolder, ILogger $logger) {
+        $this->configService = $configService;
+        $this->rootFolder = $rootFolder;
+        $this->logger = $logger;
+    }
 
 
     /**
@@ -75,50 +75,51 @@ class IndexMappingService {
      * @param IndexDocument $document
      *
      * @return array
-     * @throws ConfigurationException
-     * @throws AccessIsEmptyException
-     * @throws \OCP\Files\NotFoundException
      */
-	public function indexDocumentNew(Client $client, IndexDocument $document): array {
-        echo("Running indexDocumentNew\n");
+    public function indexDocumentNew(Client $client, IndexDocument $document): array {
+        $this->logger->debug("Running indexDocumentNew");
+        $this->logger->debug("Creating temporary file.");
 
-        echo("creating temporary file.");
+        // Currently have to write out the content of the file to a temporary location because only
+        // the content is provided.
         $tmpfname = tempnam(sys_get_temp_dir(), $document->getTitle());
         $handle = fopen($tmpfname, "w");
         fwrite($handle, base64_decode($document->getContent()));
         fclose($handle);
 
-	    $query = $client->createExtract();
-	    $query->setFile($tmpfname);
-	    $query->setCommit(true);
+        // Create the extract query for the file
+        $query = $client->createExtract();
+        $query->setFile($tmpfname);
+        $query->setCommit(true);  // Tell the servlet to commit the new data immediately
 
-	    $doc = $query->createDocument();
-	    $doc->id = $this->generateDocumentIdentifier($document->getProviderId(), $document->getId());
+        // Generate any additional metadata files to be associated with the document.
+        $doc = $query->createDocument();
+        $doc->id = $this->generateDocumentIdentifier($document->getProviderId(), $document->getId());
+        $query->setDocument($doc);
 
-	    $query->setDocument($doc);
+        // Execute the query
+        $result = $client->extract($query);
 
-	    $result = $client->extract($query);
-
-	    echo("Result: ". implode("|", $result->getData()));
+        $this->logger->debug("Result", array('result' => $result));
 
         return $result->getData();
-	}
+    }
 
+    private function generateDocumentIdentifier(string $providerId, string $documentId) {
+        return $providerId . ":" . $documentId;
+    }
 
-	/**
-	 * @param Client $client
-	 * @param IndexDocument $document
-	 *
-	 * @return array
-	 * @throws ConfigurationException
-	 * @throws AccessIsEmptyException
-	 */
-	// TODO:
-	public function indexDocumentUpdate(Client $client, IndexDocument $document): array {
+    /**
+     * @param Client $client
+     * @param IndexDocument $document
+     *
+     * @return array
+     */
+    public function indexDocumentUpdate(Client $client, IndexDocument $document): array {
 
-	   echo("Running indexDocumentUpdate");
+        $this->logger->debug("Running indexDocumentUpdate");
 
-	    return null;
+        return null;
 //		$index = [
 //			'index' =>
 //				[
@@ -135,19 +136,18 @@ class IndexMappingService {
 //		} catch (Missing404Exception $e) {
 //			return $this->indexDocumentNew($client, $document);
 //		}
-	}
+    }
 
+    /**
+     * @param Client $client
+     * @param string $providerId
+     * @param string $documentId
+     *
+     */
+    public function indexDocumentRemove(Client $client, string $providerId, string $documentId) {
 
-	/**
-	 * @param Client $client
-	 * @param string $providerId
-	 * @param string $documentId
-	 *
-	 * @throws ConfigurationException
-	 */
-	public function indexDocumentRemove(Client $client, string $providerId, string $documentId) {
-
-        echo "Removing document " . $providerId . " - " . $documentId . "\n";
+        $this->logger->debug("Removing document:", array('providerId' => $providerId,
+            'documentId' => $documentId));
 
         // get an update query instance
         $update = $client->createUpdate();
@@ -157,63 +157,58 @@ class IndexMappingService {
         $update->addCommit();
 
         // this executes the query and returns the result
-        $result = $client->update($update);
+        $client->update($update);
 
-	}
+    }
 
-	private function generateDocumentIdentifier(string $providerId, string $documentId) {
-	    return $providerId.":".$documentId;
+    /**
+     * @param IndexDocument $document
+     * @param array $arr
+     */
+    public function onIndexingDocument(IndexDocument $document, array &$arr) {
+        if ($document->getContent() !== ''
+            && $document->isContentEncoded() === IndexDocument::ENCODED_BASE64) {
+            $arr['index']['pipeline'] = 'attachment';
+        }
     }
 
 
-	/**
-	 * @param IndexDocument $document
-	 * @param array $arr
-	 */
-	public function onIndexingDocument(IndexDocument $document, array &$arr) {
-		if ($document->getContent() !== ''
-			&& $document->isContentEncoded() === IndexDocument::ENCODED_BASE64) {
-			$arr['index']['pipeline'] = 'attachment';
-		}
-	}
+    /**
+     * @param IndexDocument $document
+     *
+     * @return array
+     * @throws AccessIsEmptyException
+     */
+    public function generateIndexBody(IndexDocument $document): array {
 
+        $access = $document->getAccess();
+        if ($access === null) {
+            throw new AccessIsEmptyException('DocumentAccess is Empty');
+        }
 
-	/**
-	 * @param IndexDocument $document
-	 *
-	 * @return array
-	 * @throws AccessIsEmptyException
-	 */
-	public function generateIndexBody(IndexDocument $document): array {
-
-		$access = $document->getAccess();
-		if ($access === null) {
-			throw new AccessIsEmptyException('DocumentAccess is Empty');
-		}
-
-		// TODO: check if we can just update META or just update CONTENT.
+        // TODO: check if we can just update META or just update CONTENT.
 //		$index = $document->getIndex();
 //		$body = [];
 //		if ($index->isStatus(IIndex::INDEX_META)) {
-		$body = [
-			'owner'    => $access->getOwnerId(),
-			'users'    => $access->getUsers(),
-			'groups'   => $access->getGroups(),
-			'circles'  => $access->getCircles(),
-			'links'    => $access->getLinks(),
-			'metatags' => $document->getMetaTags(),
-			'subtags'  => $document->getSubTags(true),
-			'tags'     => $document->getTags(),
-			'hash'     => $document->getHash(),
-			'provider' => $document->getProviderId(),
-			'source'   => $document->getSource(),
-			'title'    => $document->getTitle(),
-			'parts'    => $document->getParts()
-		];
+        $body = [
+            'owner' => $access->getOwnerId(),
+            'users' => $access->getUsers(),
+            'groups' => $access->getGroups(),
+            'circles' => $access->getCircles(),
+            'links' => $access->getLinks(),
+            'metatags' => $document->getMetaTags(),
+            'subtags' => $document->getSubTags(true),
+            'tags' => $document->getTags(),
+            'hash' => $document->getHash(),
+            'provider' => $document->getProviderId(),
+            'source' => $document->getSource(),
+            'title' => $document->getTitle(),
+            'parts' => $document->getParts()
+        ];
 //		}
 
-		return array_merge($document->getInfoAll(), $body);
-	}
+        return array_merge($document->getInfoAll(), $body);
+    }
 
 }
 
