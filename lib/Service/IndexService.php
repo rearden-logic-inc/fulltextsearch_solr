@@ -32,12 +32,11 @@ declare(strict_types=1);
 namespace OCA\FullTextSearch_Solr\Service;
 
 
-use Solarium\Client;
 use daita\MySmallPhpTools\Traits\TArrayTools;
-use OCA\FullTextSearch_Solr\Exceptions\AccessIsEmptyException;
-use OCA\FullTextSearch_Solr\Exceptions\ConfigurationException;
 use OCP\FullTextSearch\Model\IIndex;
 use OCP\FullTextSearch\Model\IndexDocument;
+use OCP\ILogger;
+use Solarium\Client;
 
 
 /**
@@ -48,38 +47,34 @@ use OCP\FullTextSearch\Model\IndexDocument;
 class IndexService {
 
 
-	use TArrayTools;
+    use TArrayTools;
 
 
-	/** @var IndexMappingService */
-	private $indexMappingService;
+    /** @var IndexMappingService */
+    private $indexMappingService;
 
-	/** @var MiscService */
-	private $miscService;
+    /** @var ILogger */
+    private $logger;
 
-
-	/**
-	 * IndexService constructor.
-	 *
-	 * @param IndexMappingService $indexMappingService
-	 * @param MiscService $miscService
-	 */
-	public function __construct(
-		IndexMappingService $indexMappingService, MiscService $miscService
-	) {
-		$this->indexMappingService = $indexMappingService;
-		$this->miscService = $miscService;
-	}
+    /**
+     * IndexService constructor.
+     *
+     * @param IndexMappingService $indexMappingService
+     * @param ILogger $logger
+     */
+    public function __construct(IndexMappingService $indexMappingService, ILogger $logger) {
+        $this->indexMappingService = $indexMappingService;
+        $this->logger = $logger;
+    }
 
 
-	/**
-	 * @param Client $client
-	 *
-	 * @return bool
-	 * @throws ConfigurationException
-	 */
-	// TODO
-	public function testIndex(Client $client): bool {
+    /**
+     * @param Client $client
+     *
+     * @return bool
+     */
+    // TODO
+    public function testIndex(Client $client): bool {
 
 //		$map = $this->indexMappingService->generateGlobalMap(false);
 //		$map['client'] = [
@@ -89,42 +84,38 @@ class IndexService {
 //		return $client->indices()
 //					  ->exists($map);
         return false;
-	}
+    }
 
 
-	/**
-	 * @param Client $client
-	 *
-	 * @throws ConfigurationException
-	 * @throws BadRequest400Exception
-	 */
-	public function initializeIndex(Client $client) {
-	}
+    /**
+     * @param Client $client
+     *
+     */
+    public function initializeIndex(Client $client) {
+    }
 
 
-	/**
-	 * @param Client $client
-	 * @param string $providerId
-	 *
-	 * @throws ConfigurationException
-	 */
-	// TODO:
-	public function resetIndex(Client $client, string $providerId) {
+    /**
+     * @param Client $client
+     * @param string $providerId
+     *
+     */
+    // TODO:
+    public function resetIndex(Client $client, string $providerId) {
 //		try {
 //			$client->deleteByQuery($this->indexMappingService->generateDeleteQuery($providerId));
 //		} catch (Missing404Exception $e) {
 //			/** we do nothin' */
 //		}
-	}
+    }
 
 
-	/**
-	 * @param Client $client
-	 *
-	 * @throws ConfigurationException
-	 */
-	// TODO:
-	public function resetIndexAll(Client $client) {
+    /**
+     * @param Client $client
+     *
+     */
+    // TODO:
+    public function resetIndexAll(Client $client) {
 //		try {
 //			$client->ingest()
 //				   ->deletePipeline($this->indexMappingService->generateGlobalIngest(false));
@@ -142,60 +133,57 @@ class IndexService {
 //		} catch (Missing404Exception $e) {
 //			/* 404Exception will means that the mapping for that provider does not exist */
 //		}
-	}
+    }
 
 
-	/**
-	 * @param Client $client
-	 * @param IIndex[] $indexes
-	 *
-	 * @throws ConfigurationException
-	 */
-	public function deleteIndexes(Client $client, array $indexes) {
-		foreach ($indexes as $index) {
-			$this->indexMappingService->indexDocumentRemove(
-				$client, $index->getProviderId(), $index->getDocumentId()
-			);
-		}
-	}
+    /**
+     * @param Client $client
+     * @param IIndex[] $indexes
+     *
+     */
+    public function deleteIndexes(Client $client, array $indexes) {
+        foreach ($indexes as $index) {
+            $this->indexMappingService->indexDocumentRemove(
+                $client, $index->getProviderId(), $index->getDocumentId()
+            );
+        }
+    }
 
 
-	/**
-	 * @param Client $client
-	 * @param IndexDocument $document
-	 *
-	 * @return array
-	 * @throws ConfigurationException
-	 * @throws AccessIsEmptyException
-	 */
-	public function indexDocument(Client $client, IndexDocument $document): array {
-		$result = [];
-		$index = $document->getIndex();
-		if ($index->isStatus(IIndex::INDEX_REMOVE)) {
-			$this->indexMappingService->indexDocumentRemove($client, $document->getProviderId(), $document->getId());
-		} else if ($index->isStatus(IIndex::INDEX_OK) && !$index->isStatus(IIndex::INDEX_CONTENT)
-				   && !$index->isStatus(IIndex::INDEX_META)) {
-			$result = $this->indexMappingService->indexDocumentUpdate($client, $document);
-		} else {
-			$result = $this->indexMappingService->indexDocumentNew($client, $document);
-		}
+    /**
+     * @param Client $client
+     * @param IndexDocument $document
+     *
+     * @return array
+     */
+    public function indexDocument(Client $client, IndexDocument $document): array {
+        $result = [];
+        $index = $document->getIndex();
 
-		return $result;
-	}
+        if ($index->isStatus(IIndex::INDEX_REMOVE)) {
+            $this->indexMappingService->indexDocumentRemove($client, $document->getProviderId(), $document->getId());
+        } else if ($index->isStatus(IIndex::INDEX_OK) && !$index->isStatus(IIndex::INDEX_CONTENT)
+            && !$index->isStatus(IIndex::INDEX_META)) {
+            $result = $this->indexMappingService->indexDocumentUpdate($client, $document);
+        } else {
+            $result = $this->indexMappingService->indexDocumentNew($client, $document);
+        }
+
+        return $result;
+    }
 
 
-	/**
-	 * @param IIndex $index
-	 * @param array $result
-	 *
-	 * @return IIndex
-	 */
-	public function parseIndexResult(IIndex $index, array $result): IIndex {
+    /**
+     * @param IIndex $index
+     * @param array $result
+     *
+     * @return IIndex
+     */
+    public function parseIndexResult(IIndex $index, array $result): IIndex {
 
-		$index->setLastIndex();
+        $index->setLastIndex();
 
-		echo("Running parse Index Result");
-		echo(implode("|", $result));
+        $this->logger->debug("Running parse Index Result", array("result" => $result));
 
 //		if (array_key_exists('exception', $result)) {
 //			$index->setStatus(IIndex::INDEX_FAILED);
@@ -215,36 +203,7 @@ class IndexService {
         // Hard code the status to done for now.
         $index->setStatus(IIndex::INDEX_DONE);
 
-		return $index;
-	}
-
-
-	/**
-	 * @param BadRequest400Exception $e
-	 *
-	 * @throws ConfigurationException
-	 * @throws BadRequest400Exception
-	 */
-	private function parseBadRequest400(BadRequest400Exception $e) {
-
-		if ($e->getMessage() === '') {
-			throw new ConfigurationException(
-				'Check your user/password and the index assigned to that cloud'
-			);
-		}
-
-
-		$error = json_decode($e->getMessage(), true)['error'];
-
-		if ($error['type'] === 'parse_exception') {
-			if ($error['reason'] === 'No processor type exists with name [attachment]') {
-				throw new ConfigurationException(
-					'please add ingest-attachment plugin to elasticsearch'
-				);
-			}
-		}
-
-		throw $e;
-	}
+        return $index;
+    }
 
 }

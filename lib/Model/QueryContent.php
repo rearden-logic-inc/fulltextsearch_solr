@@ -40,143 +40,143 @@ namespace OCA\FullTextSearch_Solr\Model;
 class QueryContent {
 
 
-	const OPTION_MUST = 1;
-	const OPTION_MUST_NOT = 2;
+    const OPTION_MUST = 1;
+    const OPTION_MUST_NOT = 2;
 
 
-	/** @var string */
-	private $word;
+    /** @var string */
+    private $word;
 
-	/** @var string */
-	private $should;
+    /** @var string */
+    private $should;
 
-	/** @var string */
-	private $match;
+    /** @var string */
+    private $match;
 
-	/** @var int */
-	private $option;
-
-
-	/** @var array */
-	private $options = [
-		'+' => [self::OPTION_MUST, 'must', 'prefix'],
-		'-' => [self::OPTION_MUST_NOT, 'must_not', 'prefix']
-	];
+    /** @var int */
+    private $option;
 
 
-	/**
-	 * QueryContent constructor.
-	 *
-	 * @param string $word
-	 */
-	function __construct(string $word) {
-		$this->word = $word;
-
-		$this->init();
-	}
+    /** @var array */
+    private $options = [
+        '+' => [self::OPTION_MUST, 'must', 'prefix'],
+        '-' => [self::OPTION_MUST_NOT, 'must_not', 'prefix']
+    ];
 
 
-	/**
-	 *
-	 */
-	private function init() {
-		$this->setShould('should');
-		$this->setMatch('match_phrase_prefix');
+    /**
+     * QueryContent constructor.
+     *
+     * @param string $word
+     */
+    function __construct(string $word) {
+        $this->word = $word;
 
-		$curr = substr($this->getWord(), 0, 1);
-
-		if (array_key_exists($curr, $this->options)) {
-			$this->setOption($this->options[$curr][0])
-				 ->setShould($this->options[$curr][1])
-				 ->setMatch($this->options[$curr][2])
-				 ->setWord(substr($this->getWord(), 1));
-		}
-
-		if (substr($this->getWord(), 0, 1) === '"') {
-			$this->setMatch('match');
-			if (strpos($this->getWord(), " ") > -1) {
-				$this->setMatch('match_phrase_prefix');
-			}
-		}
-
-		$this->setWord(str_replace('"', '', $this->getWord()));
-	}
+        $this->init();
+    }
 
 
-	/**
-	 * @return string
-	 */
-	public function getWord(): string {
-		return $this->word;
-	}
+    /**
+     *
+     */
+    private function init() {
+        $this->setShould('should');
+        $this->setMatch('match_phrase_prefix');
 
-	/**
-	 * @param string $word
-	 *
-	 * @return $this
-	 */
-	public function setWord(string $word): QueryContent {
-		$this->word = $word;
+        $curr = substr($this->getWord(), 0, 1);
 
-		return $this;
-	}
+        if (array_key_exists($curr, $this->options)) {
+            $this->setOption($this->options[$curr][0])
+                 ->setShould($this->options[$curr][1])
+                 ->setMatch($this->options[$curr][2])
+                 ->setWord(substr($this->getWord(), 1));
+        }
 
+        if (substr($this->getWord(), 0, 1) === '"') {
+            $this->setMatch('match');
+            if (strpos($this->getWord(), " ") > -1) {
+                $this->setMatch('match_phrase_prefix');
+            }
+        }
 
-	/**
-	 * @return string
-	 */
-	public function getShould(): string {
-		return $this->should;
-	}
-
-	/**
-	 * @param string $should
-	 *
-	 * @return QueryContent
-	 */
-	public function setShould(string $should): QueryContent {
-		$this->should = $should;
-
-		return $this;
-	}
+        $this->setWord(str_replace('"', '', $this->getWord()));
+    }
 
 
-	/**
-	 * @return string
-	 */
-	public function getMatch(): string {
-		return $this->match;
-	}
+    /**
+     * @return string
+     */
+    public function getWord(): string {
+        return $this->word;
+    }
 
-	/**
-	 * @param string $match
-	 *
-	 * @return QueryContent
-	 */
-	public function setMatch(string $match): QueryContent {
-		$this->match = $match;
+    /**
+     * @param string $word
+     *
+     * @return $this
+     */
+    public function setWord(string $word): QueryContent {
+        $this->word = $word;
 
-		return $this;
-	}
+        return $this;
+    }
 
 
-	/**
-	 * @return int
-	 */
-	public function getOption(): int {
-		return $this->option;
-	}
+    /**
+     * @return string
+     */
+    public function getShould(): string {
+        return $this->should;
+    }
 
-	/**
-	 * @param int $option
-	 *
-	 * @return QueryContent
-	 */
-	public function setOption(int $option): QueryContent {
-		$this->option = $option;
+    /**
+     * @param string $should
+     *
+     * @return QueryContent
+     */
+    public function setShould(string $should): QueryContent {
+        $this->should = $should;
 
-		return $this;
-	}
+        return $this;
+    }
+
+
+    /**
+     * @return string
+     */
+    public function getMatch(): string {
+        return $this->match;
+    }
+
+    /**
+     * @param string $match
+     *
+     * @return QueryContent
+     */
+    public function setMatch(string $match): QueryContent {
+        $this->match = $match;
+
+        return $this;
+    }
+
+
+    /**
+     * @return int
+     */
+    public function getOption(): int {
+        return $this->option;
+    }
+
+    /**
+     * @param int $option
+     *
+     * @return QueryContent
+     */
+    public function setOption(int $option): QueryContent {
+        $this->option = $option;
+
+        return $this;
+    }
 
 
 }

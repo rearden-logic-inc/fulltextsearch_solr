@@ -33,13 +33,12 @@ namespace OCA\FullTextSearch_Solr\Platform;
 
 
 use daita\MySmallPhpTools\Traits\TPathTools;
+use OCP\ILogger;
 use Solarium\Client;
 use Exception;
-use OCA\FullTextSearch_Solr\Exceptions\AccessIsEmptyException;
 use OCA\FullTextSearch_Solr\Exceptions\ConfigurationException;
 use OCA\FullTextSearch_Solr\Service\ConfigService;
 use OCA\FullTextSearch_Solr\Service\IndexService;
-use OCA\FullTextSearch_Solr\Service\MiscService;
 use OCA\FullTextSearch_Solr\Service\SearchService;
 use OCP\FullTextSearch\IFullTextSearchPlatform;
 use OCP\FullTextSearch\Model\DocumentAccess;
@@ -48,8 +47,6 @@ use OCP\FullTextSearch\Model\IndexDocument;
 use OCP\FullTextSearch\Model\IRunner;
 use OCP\FullTextSearch\Model\ISearchResult;
 
-use OCA\FullTextSearch_Solr\Solr\Http;
-
 
 /**
  * Class SolrPlatform
@@ -57,296 +54,119 @@ use OCA\FullTextSearch_Solr\Solr\Http;
  * This is the implementation of the FullTextSearchPlatform interface that is expected by the FullTextSearch
  * application.
  *
- * @package OCA\FullTextSearch_ElasticSearch\Platform
+ * @package OCA\FullTextSearch_Solr\Platform
  */
 class SolrPlatform implements IFullTextSearchPlatform {
 
 
-	use TPathTools;
+    use TPathTools;
 
 
-	/** @var ConfigService */
-	private $configService;
+    /** @var ConfigService */
+    private $configService;
 
-	/** @var IndexService */
-	private $indexService;
+    /** @var IndexService */
+    private $indexService;
 
-	/** @var SearchService */
-	private $searchService;
+    /** @var SearchService */
+    private $searchService;
 
-	/** @var MiscService */
-	private $miscService;
+    /** @var Client */
+    private $client;
 
-	/** @var Client */
-	private $client;
+    /** @var IRunner */
+    private $runner;
 
-	/** @var IRunner */
-	private $runner;
-
-
-	/**
-	 * ElasticSearchPlatform constructor.
-	 *
-	 * @param ConfigService $configService
-	 * @param IndexService $indexService
-	 * @param SearchService $searchService
-	 * @param MiscService $miscService
-	 */
-	public function __construct(
-		ConfigService $configService, IndexService $indexService, SearchService $searchService,
-		MiscService $miscService
-	) {
-		$this->configService = $configService;
-		$this->indexService = $indexService;
-		$this->searchService = $searchService;
-		$this->miscService = $miscService;
-	}
+    /** @var ILogger */
+    private $logger;
 
 
-	/**
-	 * return a unique Id of the platform.
-	 */
-	public function getId(): string {
-		return 'solr';
-	}
+    /**
+     * Solr Platform constructor.
+     *
+     * @param ConfigService $configService
+     * @param IndexService $indexService
+     * @param SearchService $searchService
+     * @param ILogger $logger
+     */
+    public function __construct(ConfigService $configService, IndexService $indexService, SearchService $searchService,
+                                ILogger $logger) {
+        $this->configService = $configService;
+        $this->indexService = $indexService;
+        $this->searchService = $searchService;
+        $this->logger = $logger;
+    }
 
 
-	/**
-	 * return a unique Id of the platform.
-	 */
-	public function getName(): string {
-		return 'Solr';
-	}
+    /**
+     * Return a unique Id of the platform.
+     */
+    public function getId(): string {
+        return 'solr';
+    }
 
 
-	/**
-	 * @return array
-	 * @throws ConfigurationException
-	 */
-	public function getConfiguration(): array {
-
-		$result = [];
-		$hosts = $this->configService->getSolrServlet();
-
-		foreach ($hosts as $host) {
-			$parsedHost = parse_url($host);
-			$safeHost = $parsedHost['scheme'] . '://';
-			if (array_key_exists('user', $parsedHost)) {
-				$safeHost .= $parsedHost['user'] . ':' . '********' . '@';
-			}
-			$safeHost .= $parsedHost['host'];
-			$safeHost .= ':' . $parsedHost['port'];
-
-			$result[] = $safeHost;
-		}
-
-		return [
-			'solr_servlet'  => $result,
-			'solr_core' => $this->configService->getSolrCore()
-		];
-	}
+    /**
+     * Return a unique Id of the platform.
+     */
+    public function getName(): string {
+        return 'Apache Solr';
+    }
 
 
-	/**
-	 * @param IRunner $runner
-	 */
-	public function setRunner(IRunner $runner) {
-		$this->runner = $runner;
-	}
+    /**
+     * @return array
+     * @throws ConfigurationException
+     */
+    public function getConfiguration(): array {
 
+        $result = [];
+        $host = $this->configService->getSolrServlet();
 
-	/**
-	 * Called when loading the platform.
-	 *
-	 * Loading some container and connect to ElasticSearch.
-	 *
-	 * @throws ConfigurationException
-	 * @throws Exception
-	 */
-	// TODO
-	public function loadPlatform() {
-	    $this->miscService->log("Loading solarium platform", 2);
-		try {
-			$this->connect($this->configService->getSolrServlet());
-		} catch (ConfigurationException $e) {
-			throw $e;
-		}
-	}
-
-
-	/**
-	 * not used yet.
-	 *
-	 * @return bool
-	 */
-	public function testPlatform(): bool {
-        $this->miscService->log("Executing Ping");
-	    $ping = $this->client->createPing();
-
-	    try {
-            $this->client->ping($ping);
-            $this->miscService->log('Ping Successful');
-            return true;
-        } catch (Exception $e) {
-	        $this->miscService->log('Ping Failed');
-	        $this->miscService->log($e->getTraceAsString());
+        $parsedHost = parse_url($host);
+        $safeHost = $parsedHost['scheme'] . '://';
+        if (array_key_exists('user', $parsedHost)) {
+            $safeHost .= $parsedHost['user'] . ':' . '********' . '@';
         }
-        return false;
-	}
+        $safeHost .= $parsedHost['host'];
+        $safeHost .= ':' . $parsedHost['port'];
+
+        $result[] = $safeHost;
+
+        return [
+            'solr_servlet' => $result,
+            'solr_core' => $this->configService->getSolrCore()
+        ];
+    }
 
 
-	/**
-	 * called before any index
-	 *
-	 * We create a general index.
-	 *
-	 * @throws ConfigurationException
-	 * @throws BadRequest400Exception
-	 */
-	public function initializeIndex() {
-        $this->miscService->log("Initializing Index");
-	}
+    /**
+     * @param IRunner $runner
+     */
+    public function setRunner(IRunner $runner) {
+        $this->runner = $runner;
+    }
 
 
-	/**
-	 * resetIndex();
-	 *
-	 * Called when admin wants to remove an index specific to a $provider.
-	 * $provider can be null, meaning a reset of the whole index.
-	 *
-	 * @param string $providerId
-	 *
-	 * @throws ConfigurationException
-	 */
-	// TODO
-	public function resetIndex(string $providerId) {
-        $this->miscService->log("Reset Index");
-//		if ($providerId === 'all') {
-//			$this->indexService->resetIndexAll($this->client);
-//		} else {
-//			$this->indexService->resetIndex($this->client, $providerId);
-//		}
-	}
+    /**
+     * Called when loading the platform.
+     *
+     * Loading some container and connect to Solr.
+     *
+     * @throws Exception
+     */
+    public function loadPlatform() {
+        $this->logger->debug("Loading solarium platform");
+        $this->connect();
+    }
 
+    /**
+     *
+     * @throws Exception
+     */
+    private function connect() {
 
-	/**
-	 * @param IndexDocument $document
-	 *
-	 * @return IIndex
-	 */
-	public function indexDocument(IndexDocument $document): IIndex {
-
-	    echo("Asked to index document: ".$document->getId()."\n");
-	    echo("Source: ".$document->getSource()."\n");
-
-		$document->initHash();
-
-		try {
-			$result = $this->indexService->indexDocument($this->client, $document);
-
-			$index = $this->indexService->parseIndexResult($document->getIndex(), $result);
-
-			$this->updateNewIndexResult(
-				$document->getIndex(), json_encode($result), 'ok',
-				IRunner::RESULT_TYPE_SUCCESS
-			);
-
-			return $index;
-		} catch (Exception $e) {
-			$this->updateNewIndexResult(
-				$document->getIndex(), '', 'issue while indexing, testing with empty content',
-				IRunner::RESULT_TYPE_WARNING
-			);
-
-			$this->manageIndexErrorException($document, $e);
-		}
-
-        $this->updateNewIndexResult(
-				$document->getIndex(), '', 'fail',
-				IRunner::RESULT_TYPE_FAIL
-			);
-
-		return $document->getIndex();
-	}
-
-	/**
-	 * @param IndexDocument $document
-	 * @param Exception $e
-	 */
-	private function manageIndexErrorException(IndexDocument $document, Exception $e) {
-
-		$message = $this->parseIndexErrorException($e);
-		$document->getIndex()
-				 ->addError($message, get_class($e), IIndex::ERROR_SEV_3);
-		$this->updateNewIndexError(
-			$document->getIndex(), $message, get_class($e), IIndex::ERROR_SEV_3
-		);
-	}
-
-
-	/**
-	 * @param Exception $e
-	 *
-	 * @return string
-	 */
-	private function parseIndexErrorException(Exception $e): string {
-
-		$arr = json_decode($e->getMessage(), true);
-		if (!is_array($arr)) {
-			return $e->getMessage();
-		}
-
-		if (array_key_exists('reason', $arr['error']['root_cause'][0])) {
-			return $arr['error']['root_cause'][0]['reason'];
-		}
-
-		return $e->getMessage();
-	}
-
-
-	/**
-	 * {@inheritdoc}
-	 * @throws ConfigurationException
-	 */
-	public function deleteIndexes(array $indexes) {
-		try {
-			$this->indexService->deleteIndexes($this->client, $indexes);
-		} catch (ConfigurationException $e) {
-			throw $e;
-		}
-	}
-
-
-	/**
-	 * {@inheritdoc}
-	 * @throws Exception
-	 */
-	public function searchRequest(ISearchResult $result, DocumentAccess $access) {
-	    $this->miscService->log("Search Request");
-		$this->searchService->searchRequest($this->client, $result, $access);
-	}
-
-
-	/**
-	 * @param string $providerId
-	 * @param string $documentId
-	 *
-	 * @return IndexDocument
-	 * @throws ConfigurationException
-	 */
-	public function getDocument(string $providerId, string $documentId): IndexDocument {
-	    $this->miscService->log("Asked to retrieve document");
-//		return $this->searchService->getDocument($this->client, $providerId, $documentId);
-        return null;
-	}
-
-	/**
-	 *
-	 * @throws Exception
-	 */
-	private function connect() {
-
-		try {
+        try {
             $url_components = parse_url($this->configService->getSolrServlet());
 
             $port = 8983;
@@ -354,7 +174,7 @@ class SolrPlatform implements IFullTextSearchPlatform {
                 $port = $url_components['port'];
             }
 
-			$config = array(
+            $config = array(
                 'endpoint' => array(
                     'solr' => array(
                         'host' => $url_components['host'],
@@ -364,42 +184,193 @@ class SolrPlatform implements IFullTextSearchPlatform {
                     )
                 )
             );
-			$this->client = new Client($config);
-		} catch (Exception $e) {
-			throw $e;
-		}
-	}
+            $this->client = new Client($config);
+        } catch (Exception $e) {
+            throw $e;
+        }
+    }
 
-	/**
-	 * @param IIndex $index
-	 * @param string $message
-	 * @param string $exception
-	 * @param int $sev
-	 */
-	private function updateNewIndexError(IIndex $index, string $message, string $exception, int $sev
-	) {
-		if ($this->runner === null) {
-			return;
-		}
+    /**
+     * not used yet.
+     *
+     * @return bool
+     */
+    public function testPlatform(): bool {
+        $this->logger->debug("Executing Ping");
+        $ping = $this->client->createPing();
 
-		$this->runner->newIndexError($index, $message, $exception, $sev);
-	}
+        try {
+            $this->client->ping($ping);
+            $this->logger->debug('Ping Successful');
+            return true;
+        } catch (Exception $e) {
+            $this->logger->error('Ping Failed');
+            $this->logger->logException($e);
+        }
+        return false;
+    }
 
+    /**
+     * called before any index
+     *
+     * We create a general index.
+     */
+    public function initializeIndex() {
+        $this->logger->debug("Initializing Index");
+    }
 
-	/**
-	 * @param IIndex $index
-	 * @param string $message
-	 * @param string $status
-	 * @param int $type
-	 */
-	private function updateNewIndexResult(IIndex $index, string $message, string $status, int $type
-	) {
-		if ($this->runner === null) {
-			return;
-		}
+    /**
+     * resetIndex();
+     *
+     * Called when admin wants to remove an index specific to a $provider.
+     * $provider can be null, meaning a reset of the whole index.
+     *
+     * @param string $providerId
+     */
+    public function resetIndex(string $providerId) {
+        $this->logger->debug("Reset Index on provider: " . $providerId);
+//		if ($providerId === 'all') {
+//			$this->indexService->resetIndexAll($this->client);
+//		} else {
+//			$this->indexService->resetIndex($this->client, $providerId);
+//		}
+    }
 
-		$this->runner->newIndexResult($index, $message, $status, $type);
-	}
+    /**
+     * @param IndexDocument $document
+     *
+     * @return IIndex
+     */
+    public function indexDocument(IndexDocument $document): IIndex {
+
+        $this->logger->debug("Asked to index document: ", array($document->getId(), $document->getSource()));
+
+        $document->initHash();
+
+        try {
+            $result = $this->indexService->indexDocument($this->client, $document);
+
+            $index = $this->indexService->parseIndexResult($document->getIndex(), $result);
+
+            $this->updateNewIndexResult(
+                $document->getIndex(), json_encode($result), 'ok',
+                IRunner::RESULT_TYPE_SUCCESS
+            );
+
+            return $index;
+        } catch (Exception $e) {
+            $this->updateNewIndexResult(
+                $document->getIndex(), '', 'issue while indexing, testing with empty content',
+                IRunner::RESULT_TYPE_WARNING
+            );
+
+            $this->manageIndexErrorException($document, $e);
+        }
+
+        $this->updateNewIndexResult(
+            $document->getIndex(), '', 'fail',
+            IRunner::RESULT_TYPE_FAIL
+        );
+
+        return $document->getIndex();
+    }
+
+    /**
+     * @param IIndex $index
+     * @param string $message
+     * @param string $status
+     * @param int $type
+     */
+    private function updateNewIndexResult(IIndex $index, string $message, string $status, int $type
+    ) {
+        if ($this->runner === null) {
+            return;
+        }
+
+        $this->runner->newIndexResult($index, $message, $status, $type);
+    }
+
+    /**
+     * @param IndexDocument $document
+     * @param Exception $e
+     */
+    private function manageIndexErrorException(IndexDocument $document, Exception $e) {
+
+        $message = $this->parseIndexErrorException($e);
+        $document->getIndex()
+                 ->addError($message, get_class($e), IIndex::ERROR_SEV_3);
+        $this->updateNewIndexError(
+            $document->getIndex(), $message, get_class($e), IIndex::ERROR_SEV_3
+        );
+    }
+
+    /**
+     * @param Exception $e
+     *
+     * @return string
+     */
+    private function parseIndexErrorException(Exception $e): string {
+
+        $arr = json_decode($e->getMessage(), true);
+        if (!is_array($arr)) {
+            return $e->getMessage();
+        }
+
+        if (array_key_exists('reason', $arr['error']['root_cause'][0])) {
+            return $arr['error']['root_cause'][0]['reason'];
+        }
+
+        return $e->getMessage();
+    }
+
+    /**
+     * @param IIndex $index
+     * @param string $message
+     * @param string $exception
+     * @param int $sev
+     */
+    private function updateNewIndexError(IIndex $index, string $message, string $exception, int $sev
+    ) {
+        if ($this->runner === null) {
+            return;
+        }
+
+        $this->runner->newIndexError($index, $message, $exception, $sev);
+    }
+
+    /**
+     * {@inheritdoc}
+     * @throws ConfigurationException
+     */
+    public function deleteIndexes(array $indexes) {
+        try {
+            $this->indexService->deleteIndexes($this->client, $indexes);
+        } catch (ConfigurationException $e) {
+            throw $e;
+        }
+    }
+
+    /**
+     * {@inheritdoc}
+     * @throws Exception
+     */
+    public function searchRequest(ISearchResult $result, DocumentAccess $access) {
+        $this->logger->debug("Search Request");
+        $this->searchService->searchRequest($this->client, $result, $access);
+    }
+
+    /**
+     * @param string $providerId
+     * @param string $documentId
+     *
+     * @return IndexDocument
+     * @throws ConfigurationException
+     */
+    public function getDocument(string $providerId, string $documentId): IndexDocument {
+        $this->logger->debug("Asked to retrieve document");
+//		return $this->searchService->getDocument($this->client, $providerId, $documentId);
+        return null;
+    }
 
 
 }

@@ -33,6 +33,7 @@ namespace OCA\FullTextSearch_Solr\Service;
 
 
 use OCP\IConfig;
+use OCP\ILogger;
 
 
 /**
@@ -43,39 +44,39 @@ use OCP\IConfig;
 class SettingsService {
 
 
-	/** @var IConfig */
-	private $config;
+    /** @var IConfig */
+    private $config;
 
-	/** @var string */
-	private $userId;
+    /** @var string */
+    private $userId;
 
-	/** @var MiscService */
-	private $miscService;
+    /** @var ILogger */
+    private $logger;
 
 
-	/**
-	 * SettingsService constructor.
-	 *
-	 * @param IConfig $config
-	 * @param string $userId
-	 * @param MiscService $miscService
-	 */
-	public function __construct(IConfig $config, $userId, MiscService $miscService) {
-		$this->config = $config;
-		$this->userId = $userId;
-		$this->miscService = $miscService;
-	}
+    /**
+     * SettingsService constructor.
+     *
+     * @param IConfig $config
+     * @param string $userId
+     * @param ILogger $logger
+     */
+    public function __construct(IConfig $config, $userId, ILogger $logger) {
+        $this->config = $config;
+        $this->userId = $userId;
+        $this->logger = $logger;
+    }
 
-	/**
-	 * @param array $data
-	 *
-	 * @return bool
-	 */
-	public function checkConfig(array $data) {
+    /**
+     * @param array $data
+     *
+     * @return bool
+     */
+    public function checkConfig(array $data) {
 //			return false;
 
-		return true;
-	}
+        return true;
+    }
 
 
 }

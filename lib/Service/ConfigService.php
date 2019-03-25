@@ -46,192 +46,183 @@ use OCP\PreConditionNotMetException;
 class ConfigService {
 
 
-	const SOLR_SERVLET = 'solr_servlet';
-	const SOLR_CORE = 'solr_core';
+    const SOLR_SERVLET = 'solr_servlet';
+    const SOLR_CORE = 'solr_core';
 
 
-	public $defaults = [
-		self::SOLR_SERVLET   => 'http://localhost:8983/solr/',
-		self::SOLR_CORE      => 'nextcloud'
-	];
+    public $defaults = [
+        self::SOLR_SERVLET => 'http://localhost:8983/solr/',
+        self::SOLR_CORE => 'nextcloud'
+    ];
 
-	/** @var IConfig */
-	private $config;
+    /** @var IConfig */
+    private $config;
 
-	/** @var string */
-	private $userId;
+    /** @var string */
+    private $userId;
 
-	/** @var MiscService */
-	private $miscService;
-
-
-	/**
-	 * ConfigService constructor.
-	 *
-	 * @param IConfig $config
-	 * @param string $userId
-	 * @param MiscService $miscService
-	 */
-	public function __construct(IConfig $config, $userId, MiscService $miscService) {
-		$this->config = $config;
-		$this->userId = $userId;
-		$this->miscService = $miscService;
-	}
+    /**
+     * ConfigService constructor.
+     *
+     * @param IConfig $config
+     * @param string $userId
+     */
+    public function __construct(IConfig $config, $userId) {
+        $this->config = $config;
+        $this->userId = $userId;
+    }
 
 
-	/**
-	 * @return array
-	 */
-	public function getConfig(): array {
-		$keys = array_keys($this->defaults);
-		$data = [];
+    /**
+     * @return array
+     */
+    public function getConfig(): array {
+        $keys = array_keys($this->defaults);
+        $data = [];
 
-		foreach ($keys as $k) {
-			$data[$k] = $this->getAppValue($k);
-		}
+        foreach ($keys as $k) {
+            $data[$k] = $this->getAppValue($k);
+        }
 
-		return $data;
-	}
-
-
-	/**
-	 * @param array $save
-	 */
-	public function setConfig(array $save) {
-		$keys = array_keys($this->defaults);
-
-		foreach ($keys as $k) {
-			if (array_key_exists($k, $save)) {
-				$this->setAppValue($k, $save[$k]);
-			}
-		}
-	}
+        return $data;
+    }
 
 
-	/**
-	 * @return string
-	 * @throws ConfigurationException
-	 */
-	public function getSolrServlet(): string {
+    /**
+     * @param array $save
+     */
+    public function setConfig(array $save) {
+        $keys = array_keys($this->defaults);
 
-		$strHost = $this->getAppValue(self::SOLR_SERVLET);
-		if ($strHost === '') {
-			throw new ConfigurationException(
-				'Your Solr Platform is not configured properly'
-			);
-		}
+        foreach ($keys as $k) {
+            if (array_key_exists($k, $save)) {
+                $this->setAppValue($k, $save[$k]);
+            }
+        }
+    }
 
-		return trim($strHost);
-	}
+    /**
+     * Get a value by key
+     *
+     * @param string $key
+     *
+     * @return string
+     */
+    public function getAppValue(string $key): string {
+        $defaultValue = null;
+        if (array_key_exists($key, $this->defaults)) {
+            $defaultValue = $this->defaults[$key];
+        }
 
+        return $this->config->getAppValue(Application::APP_NAME, $key, $defaultValue);
+    }
 
-	/**
-	 * @return string
-	 * @throws ConfigurationException
-	 */
-	public function getSolrCore(): string {
+    /**
+     * Set a value by key
+     *
+     * @param string $key
+     * @param string $value
+     */
+    public function setAppValue(string $key, string $value) {
+        $this->config->setAppValue(Application::APP_NAME, $key, $value);
+    }
 
-		$index = $this->getAppValue(self::SOLR_CORE);
-		if ($index === '') {
-			throw new ConfigurationException(
-				'Your Solr Platform is not configured properly'
-			);
-		}
+    /**
+     * @return string
+     * @throws ConfigurationException
+     */
+    public function getSolrServlet(): string {
 
-		return $index;
-	}
+        $strHost = $this->getAppValue(self::SOLR_SERVLET);
+        if ($strHost === '') {
+            throw new ConfigurationException(
+                'Your Solr Platform is not configured properly'
+            );
+        }
 
+        return trim($strHost);
+    }
 
-	/**
-	 * Get a value by key
-	 *
-	 * @param string $key
-	 *
-	 * @return string
-	 */
-	public function getAppValue(string $key): string {
-		$defaultValue = null;
-		if (array_key_exists($key, $this->defaults)) {
-			$defaultValue = $this->defaults[$key];
-		}
+    /**
+     * @return string
+     * @throws ConfigurationException
+     */
+    public function getSolrCore(): string {
 
-		return $this->config->getAppValue(Application::APP_NAME, $key, $defaultValue);
-	}
+        $index = $this->getAppValue(self::SOLR_CORE);
+        if ($index === '') {
+            throw new ConfigurationException(
+                'Your Solr Platform is not configured properly'
+            );
+        }
 
-	/**
-	 * Set a value by key
-	 *
-	 * @param string $key
-	 * @param string $value
-	 */
-	public function setAppValue(string $key, string $value) {
-		$this->config->setAppValue(Application::APP_NAME, $key, $value);
-	}
+        return $index;
+    }
 
-	/**
-	 * remove a key
-	 *
-	 * @param string $key
-	 *
-	 * @return string
-	 */
-	public function deleteAppValue(string $key): string {
-		return $this->config->deleteAppValue(Application::APP_NAME, $key);
-	}
+    /**
+     * remove a key
+     *
+     * @param string $key
+     *
+     * @return string
+     */
+    public function deleteAppValue(string $key): string {
+        return $this->config->deleteAppValue(Application::APP_NAME, $key);
+    }
 
-	/**
-	 * Get a user value by key
-	 *
-	 * @param string $key
-	 *
-	 * @return string
-	 */
-	public function getUserValue(string $key): string {
-		$defaultValue = null;
-		if (array_key_exists($key, $this->defaults)) {
-			$defaultValue = $this->defaults[$key];
-		}
+    /**
+     * Get a user value by key
+     *
+     * @param string $key
+     *
+     * @return string
+     */
+    public function getUserValue(string $key): string {
+        $defaultValue = null;
+        if (array_key_exists($key, $this->defaults)) {
+            $defaultValue = $this->defaults[$key];
+        }
 
-		return $this->config->getUserValue(
-			$this->userId, Application::APP_NAME, $key, $defaultValue
-		);
-	}
+        return $this->config->getUserValue(
+            $this->userId, Application::APP_NAME, $key, $defaultValue
+        );
+    }
 
-	/**
-	 * Set a user value by key
-	 *
-	 * @param string $key
-	 * @param string $value
-	 *
-	 * @throws PreConditionNotMetException
-	 */
-	public function setUserValue(string $key, string $value) {
-		$this->config->setUserValue($this->userId, Application::APP_NAME, $key, $value);
-	}
+    /**
+     * Set a user value by key
+     *
+     * @param string $key
+     * @param string $value
+     *
+     * @throws PreConditionNotMetException
+     */
+    public function setUserValue(string $key, string $value) {
+        $this->config->setUserValue($this->userId, Application::APP_NAME, $key, $value);
+    }
 
-	/**
-	 * Get a user value by key and user
-	 *
-	 * @param string $userId
-	 * @param string $key
-	 *
-	 * @return string
-	 */
-	public function getValueForUser(string $userId, string $key): string {
-		return $this->config->getUserValue($userId, Application::APP_NAME, $key);
-	}
+    /**
+     * Get a user value by key and user
+     *
+     * @param string $userId
+     * @param string $key
+     *
+     * @return string
+     */
+    public function getValueForUser(string $userId, string $key): string {
+        return $this->config->getUserValue($userId, Application::APP_NAME, $key);
+    }
 
-	/**
-	 * Set a user value by key
-	 *
-	 * @param string $userId
-	 * @param string $key
-	 * @param string $value
-	 *
-	 * @throws PreConditionNotMetException
-	 */
-	public function setValueForUser($userId, $key, $value) {
-		$this->config->setUserValue($userId, Application::APP_NAME, $key, $value);
-	}
+    /**
+     * Set a user value by key
+     *
+     * @param string $userId
+     * @param string $key
+     * @param string $value
+     *
+     * @throws PreConditionNotMetException
+     */
+    public function setValueForUser($userId, $key, $value) {
+        $this->config->setUserValue($userId, Application::APP_NAME, $key, $value);
+    }
 
 }
