@@ -33,6 +33,7 @@ namespace OCA\FullTextSearch_Solr\Service;
 
 
 use daita\MySmallPhpTools\Traits\TArrayTools;
+use OCA\FullTextSearch_Solr\Exceptions\DataExtractionException;
 use OCP\FullTextSearch\Model\IIndex;
 use OCP\FullTextSearch\Model\IndexDocument;
 use OCP\ILogger;
@@ -155,6 +156,7 @@ class IndexService {
      * @param IndexDocument $document
      *
      * @return array
+     * @throws DataExtractionException
      */
     public function indexDocument(Client $client, IndexDocument $document): array {
         $result = [];
