@@ -33,6 +33,9 @@ namespace OCA\FullTextSearch_Solr\Service;
 
 
 use Exception;
+use OCA\Files_FullTextSearch\Model\FilesDocument;
+use OCA\FullTextSearch\Exceptions\NotIndexableDocumentException;
+use OCA\FullTextSearch\Exceptions\ProviderIsNotCompatibleException;
 use OCA\FullTextSearch_Solr\Exceptions\AccessIsEmptyException;
 use OCA\FullTextSearch_Solr\Exceptions\DataExtractionException;
 use OCP\Files\IRootFolder;
@@ -78,9 +81,35 @@ class IndexMappingService {
      * @param IndexDocument $document
      *
      * @return array
-     * @throws DataExtractionException
+     * @throws DataExtractionException Thrown when solr throws an exception
+     * @throws NotIndexableDocumentException Thrown when file type is not supported
+     * @throws ProviderIsNotCompatibleException thrown when provider is not compatible with this platform
      */
     public function indexDocumentNew(Client $client, IndexDocument $document): array {
+
+        if ($document->getProviderId() == 'files') {
+
+            /** @var FilesDocument $document*/
+            if ($document->getType() == 'dir') {
+                throw new NotIndexableDocumentException("File is a directory");
+            }
+
+            return $this->indexFile($client, $document);
+
+        }
+
+        throw new ProviderIsNotCompatibleException("Solr Platform does not support provider type: ".$document->getProviderId());
+
+    }
+
+    /**
+     * Create an extract query for SOLR and provide the file contents.
+     * @param Client $client
+     * @param IndexDocument $document
+     * @return array
+     * @throws DataExtractionException
+     */
+    private function indexFile(Client $client, IndexDocument $document): array {
         $this->logger->debug("Running indexDocumentNew");
         $this->logger->debug("Creating temporary file.");
 
@@ -109,7 +138,6 @@ class IndexMappingService {
         } catch (SolariumHttpException $e) {
             throw new DataExtractionException($document->getTitle(), $e->getCode(), $e);
         }
-
 
     }
 
