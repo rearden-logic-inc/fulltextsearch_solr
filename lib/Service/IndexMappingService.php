@@ -32,11 +32,14 @@ declare(strict_types=1);
 namespace OCA\FullTextSearch_Solr\Service;
 
 
+use Exception;
 use OCA\FullTextSearch_Solr\Exceptions\AccessIsEmptyException;
+use OCA\FullTextSearch_Solr\Exceptions\DataExtractionException;
 use OCP\Files\IRootFolder;
 use OCP\FullTextSearch\Model\IndexDocument;
 use OCP\ILogger;
 use Solarium\Client;
+use Solarium\Exception\HttpException as SolariumHttpException;
 
 
 /**
@@ -75,6 +78,7 @@ class IndexMappingService {
      * @param IndexDocument $document
      *
      * @return array
+     * @throws DataExtractionException
      */
     public function indexDocumentNew(Client $client, IndexDocument $document): array {
         $this->logger->debug("Running indexDocumentNew");
@@ -98,11 +102,15 @@ class IndexMappingService {
         $query->setDocument($doc);
 
         // Execute the query
-        $result = $client->extract($query);
+        try {
+            $result = $client->extract($query);
+            $this->logger->debug("Result", array('result' => $result));
+            return $result->getData();
+        } catch (SolariumHttpException $e) {
+            throw new DataExtractionException($document->getTitle(), $e->getCode(), $e);
+        }
 
-        $this->logger->debug("Result", array('result' => $result));
 
-        return $result->getData();
     }
 
     private function generateDocumentIdentifier(string $providerId, string $documentId) {
