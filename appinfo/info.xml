@@ -10,7 +10,7 @@ Extension to the _Full text search_ app to communicate with Solr.
 
 ]]>
 	</description>
-	<version>0.2.0</version>
+	<version>0.3.0</version>
 	<licence>agpl</licence>
 	<author>Rearden Logic</author>
 	<namespace>FullTextSearch_Solr</namespace>
