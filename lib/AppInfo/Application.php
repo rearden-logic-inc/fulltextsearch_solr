@@ -38,22 +38,22 @@ use OCP\AppFramework\App;
 /**
  * Class Application
  *
- * @package OCA\FullTextSearch_ElasticSearch\AppInfo
+ * @package OCA\FullTextSearch_Solr\AppInfo
  */
 class Application extends App {
 
 
-	const APP_NAME = 'fulltextsearch_solr';
+    const APP_NAME = 'fulltextsearch_solr';
 
 
-	/**
-	 * Application constructor.
-	 *
-	 * @param array $params
-	 */
-	public function __construct(array $params = []) {
-		parent::__construct(self::APP_NAME, $params);
-	}
+    /**
+     * Application constructor.
+     *
+     * @param array $params
+     */
+    public function __construct(array $params = []) {
+        parent::__construct(self::APP_NAME, $params);
+    }
 
 }
 

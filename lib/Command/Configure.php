@@ -35,7 +35,7 @@ namespace OCA\FullTextSearch_Solr\Command;
 use Exception;
 use OC\Core\Command\Base;
 use OCA\FullTextSearch_Solr\Service\ConfigService;
-use OCA\FullTextSearch_Solr\Service\MiscService;
+use OCP\ILogger;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -49,64 +49,64 @@ use Symfony\Component\Console\Output\OutputInterface;
 class Configure extends Base {
 
 
-	/** @var ConfigService */
-	private $configService;
+    /** @var ConfigService */
+    private $configService;
 
-	/** @var MiscService */
-	private $miscService;
-
-
-	/**
-	 * Configure constructor.
-	 *
-	 * @param ConfigService $configService
-	 * @param MiscService $miscService
-	 */
-	public function __construct(ConfigService $configService, MiscService $miscService) {
-		parent::__construct();
-
-		$this->configService = $configService;
-		$this->miscService = $miscService;
-	}
+    /** @var ILogger */
+    private $logger;
 
 
-	/**
-	 *
-	 */
-	protected function configure() {
-		parent::configure();
-		$this->setName('fulltextsearch_solr:configure')
-			 ->addArgument('json', InputArgument::REQUIRED, 'set config')
-			 ->setDescription('Configure the installation');
-	}
+    /**
+     * Configure constructor.
+     *
+     * @param ConfigService $configService
+     * @param ILogger $logger
+     */
+    public function __construct(ConfigService $configService, ILogger $logger) {
+        parent::__construct();
+
+        $this->configService = $configService;
+        $this->logger = $logger;
+    }
 
 
-	/**
-	 * @param InputInterface $input
-	 * @param OutputInterface $output
-	 *
-	 * @throws Exception
-	 */
-	protected function execute(InputInterface $input, OutputInterface $output) {
-		$json = $input->getArgument('json');
+    /**
+     *
+     */
+    protected function configure() {
+        parent::configure();
+        $this->setName('fulltextsearch_solr:configure')
+             ->addArgument('json', InputArgument::REQUIRED, 'set config')
+             ->setDescription('Configure the installation');
+    }
 
-		$config = json_decode($json, true);
 
-		if ($config === null) {
-			$output->writeln('Invalid JSON');
+    /**
+     * @param InputInterface $input
+     * @param OutputInterface $output
+     *
+     * @throws Exception
+     */
+    protected function execute(InputInterface $input, OutputInterface $output) {
+        $json = $input->getArgument('json');
 
-			return;
-		}
+        $config = json_decode($json, true);
 
-		$ak = array_keys($config);
-		foreach ($ak as $k) {
-			if (array_key_exists($k, $this->configService->defaults)) {
-				$this->configService->setAppValue($k, $config[$k]);
-			}
-		}
+        if ($config === null) {
+            $output->writeln('Invalid JSON');
 
-		$output->writeln(json_encode($this->configService->getConfig(), JSON_PRETTY_PRINT));
-	}
+            return;
+        }
+
+        $ak = array_keys($config);
+        foreach ($ak as $k) {
+            if (array_key_exists($k, $this->configService->defaults)) {
+                $this->configService->setAppValue($k, $config[$k]);
+            }
+        }
+
+        $output->writeln(json_encode($this->configService->getConfig(), JSON_PRETTY_PRINT));
+    }
 
 
 }
