@@ -137,6 +137,8 @@ class IndexMappingService {
             return $result->getData();
         } catch (SolariumHttpException $e) {
             throw new DataExtractionException($document->getTitle(), $e->getCode(), $e);
+        } finally {
+            unlink($tmpfname);
         }
 
     }
