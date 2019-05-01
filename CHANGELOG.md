@@ -2,6 +2,9 @@
 
 ## Current Development
 
+- Features
+  - Allow Pagination of results
+
 ## v 0.2.0
 
 Bug Fixes 

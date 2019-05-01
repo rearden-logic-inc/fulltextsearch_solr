@@ -89,6 +89,8 @@ class SearchService {
         $selectQuery = $client->createSelect();
 
         $selectQuery->setQuery($searchResult->getRequest()->getSearch());
+        $selectQuery->setStart(($searchResult->getRequest()->getPage() -1) * $searchResult->getRequest()->getSize());
+        $selectQuery->setRows($searchResult->getRequest()->getSize());
 
         $resultSet = $client->execute($selectQuery);
 
@@ -98,15 +100,6 @@ class SearchService {
 
     }
 
-
-    /**
-     * @param Client $client
-     * @param string $providerId
-     * @param string $documentId
-     *
-     * @return IndexDocument
-     */
-    //TODO
     /**
      * @param ISearchResult $searchResult
      * @param DocumentAccess $access
