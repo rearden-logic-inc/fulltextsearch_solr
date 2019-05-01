@@ -34,6 +34,7 @@ namespace OCA\FullTextSearch_Solr\Service;
 
 use daita\MySmallPhpTools\Traits\TArrayTools;
 use Exception;
+use OCA\FullTextSearch_Solr\Utilities\Utils;
 use OCP\FullTextSearch\Model\DocumentAccess;
 use OCP\FullTextSearch\Model\IndexDocument;
 use OCP\FullTextSearch\Model\ISearchResult;
@@ -132,7 +133,7 @@ class SearchService {
         $access = new DocumentAccess();
         $access->setViewerId($viewerId);
 
-        list($providerId, $documentId) = explode(':', $entry->id, 2);
+        list($providerId, $documentId) = Utils::parseDocumentIdentifier($entry->id);
         $document = new IndexDocument($providerId, $documentId);
         $document->setAccess($access);
         $document->setHash('Unknown');  // TODO: Save off the hash some where.
