@@ -31,9 +31,11 @@ declare(strict_types=1);
 
 namespace OCA\FullTextSearch_Solr\Service;
 
-
 use daita\MySmallPhpTools\Traits\TArrayTools;
+use OCA\FullTextSearch\Exceptions\NotIndexableDocumentException;
+use OCA\FullTextSearch\Exceptions\ProviderIsNotCompatibleException;
 use OCA\FullTextSearch_Solr\Exceptions\DataExtractionException;
+use OCA\FullTextSearch_Solr\Utilities\Utils;
 use OCP\FullTextSearch\Model\IIndex;
 use OCP\FullTextSearch\Model\IndexDocument;
 use OCP\ILogger;
@@ -101,13 +103,12 @@ class IndexService {
      * @param string $providerId
      *
      */
-    // TODO:
     public function resetIndex(Client $client, string $providerId) {
-//		try {
-//			$client->deleteByQuery($this->indexMappingService->generateDeleteQuery($providerId));
-//		} catch (Missing404Exception $e) {
-//			/** we do nothin' */
-//		}
+        $update = $client->createUpdate();
+        $update->addDeleteQuery('id:' . Utils::generateDocumentIdentifier($providerId, '*'));
+        $update->addCommit();
+
+        $client->update($update);
     }
 
 
@@ -115,25 +116,12 @@ class IndexService {
      * @param Client $client
      *
      */
-    // TODO:
     public function resetIndexAll(Client $client) {
-//		try {
-//			$client->ingest()
-//				   ->deletePipeline($this->indexMappingService->generateGlobalIngest(false));
-//		} catch (Missing404Exception $e) {
-//			/* 404Exception will means that the mapping for that provider does not exist */
-//		} catch (BadRequest400Exception $e) {
-//			throw new ConfigurationException(
-//				'Check your user/password and the index assigned to that cloud'
-//			);
-//		}
-//
-//		try {
-//			$client->indices()
-//				   ->delete($this->indexMappingService->generateGlobalMap(false));
-//		} catch (Missing404Exception $e) {
-//			/* 404Exception will means that the mapping for that provider does not exist */
-//		}
+        $update = $client->createUpdate();
+        $update->addDeleteQuery("id:*");
+        $update->addCommit();
+
+        $client->update($update);
     }
 
 
@@ -150,13 +138,14 @@ class IndexService {
         }
     }
 
-
     /**
      * @param Client $client
      * @param IndexDocument $document
      *
      * @return array
      * @throws DataExtractionException
+     * @throws NotIndexableDocumentException
+     * @throws ProviderIsNotCompatibleException
      */
     public function indexDocument(Client $client, IndexDocument $document): array {
         $result = [];

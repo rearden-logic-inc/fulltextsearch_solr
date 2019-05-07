@@ -4,6 +4,7 @@
 
 - Features
   - Allow Pagination of results
+  - Index Reset Functionality in place
 
 ## v 0.2.0
 

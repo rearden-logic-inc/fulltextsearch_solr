@@ -229,11 +229,11 @@ class SolrPlatform implements IFullTextSearchPlatform {
      */
     public function resetIndex(string $providerId) {
         $this->logger->debug("Reset Index on provider: " . $providerId);
-//		if ($providerId === 'all') {
-//			$this->indexService->resetIndexAll($this->client);
-//		} else {
-//			$this->indexService->resetIndex($this->client, $providerId);
-//		}
+		if ($providerId === 'all') {
+			$this->indexService->resetIndexAll($this->client);
+		} else {
+			$this->indexService->resetIndex($this->client, $providerId);
+		}
     }
 
     /**
