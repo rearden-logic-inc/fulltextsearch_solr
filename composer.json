@@ -1,5 +1,5 @@
 {
-  "name": "nextcloud/fulltextsearch_solr",
+  "name": "rearden/fulltextsearch_solr",
   "description": "fulltextsearch_solr",
   "minimum-stability": "alpha",
   "license": "agpl",
@@ -10,7 +10,7 @@
     }
   ],
   "require": {
-    "solarium/solarium": "3.6.0",
+    "solarium/solarium": "5.0.1",
     "daita/my-small-php-tools": "dev-master",
     "ext-json": "*"
   }

@@ -180,7 +180,7 @@ class SolrPlatform implements IFullTextSearchPlatform {
                         'host' => $url_components['host'],
                         'port' => $port,
                         'path' => $url_components['path'],
-                        'core' => $this->configService->getSolrCore(),
+                        'collection' => $this->configService->getSolrCore(),
                     )
                 )
             );

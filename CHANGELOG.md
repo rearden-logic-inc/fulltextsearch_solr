@@ -5,6 +5,7 @@
 - Features
   - Allow Pagination of results
   - Index Reset Functionality in place
+  - Update Solarium to 5.0.1
 
 ## v 0.2.0
 
