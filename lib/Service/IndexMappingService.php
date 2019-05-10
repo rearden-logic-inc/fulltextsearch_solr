@@ -124,11 +124,19 @@ class IndexMappingService {
         // Create the extract query for the file
         $query = $client->createExtract();
         $query->setFile($tmpfname);
+        $query->setUprefix('nc_');
         $query->setCommit(true);  // Tell the servlet to commit the new data immediately
 
         // Generate any additional metadata files to be associated with the document.
         $doc = $query->createDocument();
         $doc->id = Utils::generateDocumentIdentifier($document->getProviderId(), $document->getId());
+        $doc->tags = $document->getTags();
+
+        $subTags = $document->getSubTags();
+        foreach (array_keys($subTags) as $subTagKey) {
+            $doc->$subTagKey = $subTags[$subTagKey];
+        }
+
         $query->setDocument($doc);
 
         // Execute the query
