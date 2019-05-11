@@ -34,6 +34,7 @@ namespace OCA\FullTextSearch_Solr\Service;
 
 use daita\MySmallPhpTools\Traits\TArrayTools;
 use Exception;
+use OCA\FullTextSearch\Model\SearchRequest;
 use OCA\FullTextSearch_Solr\Utilities\Utils;
 use OCP\FullTextSearch\Model\DocumentAccess;
 use OCP\FullTextSearch\Model\IndexDocument;
@@ -83,15 +84,29 @@ class SearchService {
         Client $client, ISearchResult $searchResult, DocumentAccess $access
     ) {
 
+        /** @var SearchRequest $request */
+        $request = $searchResult->getRequest();
         $this->logger->debug("Search result requested.",
-                             array("request" => $searchResult->getRequest()->getSearch(),
-                                 "provider" => $searchResult->getProvider()->getId()));
+                             array("request" => $request->getSearch(),
+                                   "provider" => $searchResult->getProvider()->getId()));
 
         $selectQuery = $client->createSelect();
 
         $selectQuery->setQuery($searchResult->getRequest()->getSearch());
         $selectQuery->setStart(($searchResult->getRequest()->getPage() -1) * $searchResult->getRequest()->getSize());
         $selectQuery->setRows($searchResult->getRequest()->getSize());
+
+        // Add the list of tags from the select query to the search request
+        if (!empty($request->getTags())) {
+            $selectQuery->createFilterQuery('tags')->setQuery('tags:'.implode(' ', $request->getTags()));
+        }
+
+        // Add all of the metadata queries to the search request
+        if (!empty($request->getSubTags())) {
+            foreach ($request->getSubTags() as $key => $value) {
+                $selectQuery->createFilterQuery($key)->setQuery("{$key}:{$value}");
+            }
+        }
 
         $resultSet = $client->execute($selectQuery);
 
