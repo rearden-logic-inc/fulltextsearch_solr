@@ -1,6 +1,6 @@
 # Changelog
 
-## Current Development
+## v 0.3.0
 
 - Features
   - Allow Pagination of results
