@@ -6,7 +6,8 @@
   - Allow Pagination of results
   - Index Reset Functionality in place
   - Update Solarium to 5.0.1
-
+  - Process Tags and SubTags for queries and search requests
+ 
 ## v 0.2.0
 
 Bug Fixes 
