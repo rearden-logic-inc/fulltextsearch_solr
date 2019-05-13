@@ -124,7 +124,7 @@ class IndexMappingService {
         // Create the extract query for the file
         $query = $client->createExtract();
         $query->setFile($tmpfname);
-        $query->setUprefix('nc_');
+        $query->setUprefix(Utils::USER_PREFIX);
         $query->setCommit(true);  // Tell the servlet to commit the new data immediately
 
         // Generate any additional metadata files to be associated with the document.

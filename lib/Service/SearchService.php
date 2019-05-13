@@ -91,20 +91,21 @@ class SearchService {
                                    "provider" => $searchResult->getProvider()->getId()));
 
         $selectQuery = $client->createSelect();
+        $selectQuery->setOmitHeader(false);
 
-        $selectQuery->setQuery($searchResult->getRequest()->getSearch());
-        $selectQuery->setStart(($searchResult->getRequest()->getPage() -1) * $searchResult->getRequest()->getSize());
-        $selectQuery->setRows($searchResult->getRequest()->getSize());
+        $selectQuery->setQuery($request->getSearch());
+        $selectQuery->setStart(($request->getPage() -1) * $request->getSize());
+        $selectQuery->setRows($request->getSize());
 
         // Add the list of tags from the select query to the search request
         if (!empty($request->getTags())) {
-            $selectQuery->createFilterQuery('tags')->setQuery('tags:'.implode(' ', $request->getTags()));
+            $selectQuery->createFilterQuery('tagFilter')->setQuery(Utils::createDocumentField('tags').':'.implode(' ', $request->getTags()));
         }
 
         // Add all of the metadata queries to the search request
         if (!empty($request->getSubTags())) {
             foreach ($request->getSubTags() as $key => $value) {
-                $selectQuery->createFilterQuery($key)->setQuery("{$key}:{$value}");
+                $selectQuery->createFilterQuery($key)->setQuery(Utils::createDocumentField($key).":{$value}");
             }
         }
 
@@ -130,7 +131,7 @@ class SearchService {
 
         $searchResult->setTotal($result->response->numFound);
         $searchResult->setMaxScore(intval($result->response->maxScore * 100));  // 100 is arbitrary
-        $searchResult->setTime(1);   // Don't have a means of fetching this value yet. value is milliseconds
+        $searchResult->setTime($result->responseHeader->QTime);
         $searchResult->setTimedOut(false);
 
         foreach ($result->response->docs as $entry) {
