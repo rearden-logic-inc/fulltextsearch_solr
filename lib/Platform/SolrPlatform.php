@@ -180,7 +180,7 @@ class SolrPlatform implements IFullTextSearchPlatform {
                         'host' => $url_components['host'],
                         'port' => $port,
                         'path' => $url_components['path'],
-                        'core' => $this->configService->getSolrCore(),
+                        'collection' => $this->configService->getSolrCore(),
                     )
                 )
             );
@@ -229,11 +229,11 @@ class SolrPlatform implements IFullTextSearchPlatform {
      */
     public function resetIndex(string $providerId) {
         $this->logger->debug("Reset Index on provider: " . $providerId);
-//		if ($providerId === 'all') {
-//			$this->indexService->resetIndexAll($this->client);
-//		} else {
-//			$this->indexService->resetIndex($this->client, $providerId);
-//		}
+		if ($providerId === 'all') {
+			$this->indexService->resetIndexAll($this->client);
+		} else {
+			$this->indexService->resetIndex($this->client, $providerId);
+		}
     }
 
     /**

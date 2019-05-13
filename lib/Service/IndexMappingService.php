@@ -38,6 +38,7 @@ use OCA\FullTextSearch\Exceptions\NotIndexableDocumentException;
 use OCA\FullTextSearch\Exceptions\ProviderIsNotCompatibleException;
 use OCA\FullTextSearch_Solr\Exceptions\AccessIsEmptyException;
 use OCA\FullTextSearch_Solr\Exceptions\DataExtractionException;
+Use OCA\FullTextSearch_Solr\Utilities\Utils;
 use OCP\Files\IRootFolder;
 use OCP\FullTextSearch\Model\IndexDocument;
 use OCP\ILogger;
@@ -123,11 +124,19 @@ class IndexMappingService {
         // Create the extract query for the file
         $query = $client->createExtract();
         $query->setFile($tmpfname);
+        $query->setUprefix(Utils::USER_PREFIX);
         $query->setCommit(true);  // Tell the servlet to commit the new data immediately
 
         // Generate any additional metadata files to be associated with the document.
         $doc = $query->createDocument();
-        $doc->id = $this->generateDocumentIdentifier($document->getProviderId(), $document->getId());
+        $doc->id = Utils::generateDocumentIdentifier($document->getProviderId(), $document->getId());
+        $doc->tags = $document->getTags();
+
+        $subTags = $document->getSubTags();
+        foreach (array_keys($subTags) as $subTagKey) {
+            $doc->$subTagKey = $subTags[$subTagKey];
+        }
+
         $query->setDocument($doc);
 
         // Execute the query
@@ -141,10 +150,6 @@ class IndexMappingService {
             unlink($tmpfname);
         }
 
-    }
-
-    private function generateDocumentIdentifier(string $providerId, string $documentId) {
-        return $providerId . ":" . $documentId;
     }
 
     /**
@@ -191,7 +196,7 @@ class IndexMappingService {
         $update = $client->createUpdate();
 
         // add the delete id and a commit command to the update query
-        $update->addDeleteById($this->generateDocumentIdentifier($providerId, $documentId));
+        $update->addDeleteById(Utils::generateDocumentIdentifier($providerId, $documentId));
         $update->addCommit();
 
         // this executes the query and returns the result
