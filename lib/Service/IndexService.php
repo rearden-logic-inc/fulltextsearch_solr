@@ -143,9 +143,9 @@ class IndexService {
      * @param IndexDocument $document
      *
      * @return array
-     * @throws DataExtractionException
      * @throws NotIndexableDocumentException
      * @throws ProviderIsNotCompatibleException
+     * @throws DataExtractionException
      */
     public function indexDocument(Client $client, IndexDocument $document): array {
         $result = [];
@@ -153,10 +153,9 @@ class IndexService {
 
         if ($index->isStatus(IIndex::INDEX_REMOVE)) {
             $this->indexMappingService->indexDocumentRemove($client, $document->getProviderId(), $document->getId());
-        } else if ($index->isStatus(IIndex::INDEX_OK) && !$index->isStatus(IIndex::INDEX_CONTENT)
-            && !$index->isStatus(IIndex::INDEX_META)) {
-            $result = $this->indexMappingService->indexDocumentUpdate($client, $document);
         } else {
+            // Per documentation of solarium, there is no means of updating a single field of the document, the entire
+            // document (including context) must be sent to Solr
             $result = $this->indexMappingService->indexDocumentNew($client, $document);
         }
 

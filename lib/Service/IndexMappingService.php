@@ -35,7 +35,6 @@ namespace OCA\FullTextSearch_Solr\Service;
 use OCA\Files_FullTextSearch\Model\FilesDocument;
 use OCA\FullTextSearch\Exceptions\NotIndexableDocumentException;
 use OCA\FullTextSearch\Exceptions\ProviderIsNotCompatibleException;
-use OCA\FullTextSearch_Solr\Exceptions\AccessIsEmptyException;
 use OCA\FullTextSearch_Solr\Exceptions\DataExtractionException;
 Use OCA\FullTextSearch_Solr\Utilities\Utils;
 use OCP\Files\IRootFolder;
@@ -99,7 +98,6 @@ class IndexMappingService {
         }
 
         throw new ProviderIsNotCompatibleException("Solr Platform does not support provider type: ".$document->getProviderId());
-
     }
 
     /**
@@ -153,35 +151,6 @@ class IndexMappingService {
 
     /**
      * @param Client $client
-     * @param IndexDocument $document
-     *
-     * @return array
-     */
-    public function indexDocumentUpdate(Client $client, IndexDocument $document): array {
-
-        $this->logger->debug("Running indexDocumentUpdate");
-
-        return null;
-//		$index = [
-//			'index' =>
-//				[
-//					'index' => $this->configService->getSolrIndex(),
-//					'id'    => $document->getProviderId() . ':' . $document->getId(),
-//					'type'  => 'standard',
-//					'body'  => ['doc' => $this->generateIndexBody($document)]
-//				]
-//		];
-//
-//		$this->onIndexingDocument($document, $index);
-//		try {
-//			return $client->update($index['index']);
-//		} catch (Missing404Exception $e) {
-//			return $this->indexDocumentNew($client, $document);
-//		}
-    }
-
-    /**
-     * @param Client $client
      * @param string $providerId
      * @param string $documentId
      *
@@ -201,55 +170,6 @@ class IndexMappingService {
         // this executes the query and returns the result
         $client->update($update);
 
-    }
-
-    /**
-     * @param IndexDocument $document
-     * @param array $arr
-     */
-    public function onIndexingDocument(IndexDocument $document, array &$arr) {
-        if ($document->getContent() !== ''
-            && $document->isContentEncoded() === IndexDocument::ENCODED_BASE64) {
-            $arr['index']['pipeline'] = 'attachment';
-        }
-    }
-
-
-    /**
-     * @param IndexDocument $document
-     *
-     * @return array
-     * @throws AccessIsEmptyException
-     */
-    public function generateIndexBody(IndexDocument $document): array {
-
-        $access = $document->getAccess();
-        if ($access === null) {
-            throw new AccessIsEmptyException('DocumentAccess is Empty');
-        }
-
-        // TODO: check if we can just update META or just update CONTENT.
-//		$index = $document->getIndex();
-//		$body = [];
-//		if ($index->isStatus(IIndex::INDEX_META)) {
-        $body = [
-            'owner' => $access->getOwnerId(),
-            'users' => $access->getUsers(),
-            'groups' => $access->getGroups(),
-            'circles' => $access->getCircles(),
-            'links' => $access->getLinks(),
-            'metatags' => $document->getMetaTags(),
-            'subtags' => $document->getSubTags(true),
-            'tags' => $document->getTags(),
-            'hash' => $document->getHash(),
-            'provider' => $document->getProviderId(),
-            'source' => $document->getSource(),
-            'title' => $document->getTitle(),
-            'parts' => $document->getParts()
-        ];
-//		}
-
-        return array_merge($document->getInfoAll(), $body);
     }
 
 }
