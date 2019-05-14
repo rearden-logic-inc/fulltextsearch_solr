@@ -35,5 +35,5 @@ namespace OCA\FullTextSearch_Solr\AppInfo;
 require_once __DIR__ . '/autoload.php';
 
 
-new Application();
-
+$application = new Application();
+$application->register();

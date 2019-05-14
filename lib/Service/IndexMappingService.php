@@ -113,16 +113,28 @@ class IndexMappingService {
 
         // Currently have to write out the content of the file to a temporary location because only
         // the content is provided.
-        $tmpfname = tempnam(sys_get_temp_dir(), $document->getTitle());
-        $handle = fopen($tmpfname, "w");
-        fwrite($handle, base64_decode($document->getContent()));
-        fclose($handle);
+        $realPath = $document->getInfo(FileService::PATH_INFO_KEY, '');
+        $tempUsed = false;
+        if (empty($realPath)) {
+            $realPath = tempnam(sys_get_temp_dir(), $document->getTitle());
+            $handle = fopen($realPath, "w");
+            fwrite($handle, base64_decode($document->getContent()));
+            fclose($handle);
+            $tempUsed = true;
+        }
 
         // Create the extract query for the file
         $query = $client->createExtract();
-        $query->setFile($tmpfname);
+        $query->setFile($realPath);
         $query->setUprefix(Utils::USER_PREFIX);
-        $query->setCommit(true);  // Tell the servlet to commit the new data immediately
+//        $query->setCommit(true);  // Tell the servlet to commit the new data immediately
+        $commitTime = (int) $this->configService->getAppValue(ConfigService::SOLR_COMMIT_WITHIN);
+        if ($commitTime <= 0) {
+            $query->setCommit(true);
+        } else {
+            $query->setCommitWithin($commitTime * 1000);
+        }
+
 
         // Generate any additional metadata files to be associated with the document.
         $doc = $query->createDocument();
@@ -144,7 +156,9 @@ class IndexMappingService {
         } catch (SolariumHttpException $e) {
             throw new DataExtractionException($document->getTitle(), $e->getCode(), $e);
         } finally {
-            unlink($tmpfname);
+            if ($tempUsed) {
+                unlink($realPath);
+            }
         }
 
     }

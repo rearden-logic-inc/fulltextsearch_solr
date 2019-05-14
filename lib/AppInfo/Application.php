@@ -31,7 +31,7 @@ declare(strict_types=1);
 
 namespace OCA\FullTextSearch_Solr\AppInfo;
 
-
+use OCA\FullTextSearch_Solr\Service\FileService;
 use OCP\AppFramework\App;
 
 
@@ -42,9 +42,7 @@ use OCP\AppFramework\App;
  */
 class Application extends App {
 
-
     const APP_NAME = 'fulltextsearch_solr';
-
 
     /**
      * Application constructor.
@@ -53,6 +51,15 @@ class Application extends App {
      */
     public function __construct(array $params = []) {
         parent::__construct(self::APP_NAME, $params);
+    }
+
+    public function register() {
+
+        $container = $this->getContainer();
+
+        /** @var FileService $indexService */
+        $indexService = $container->query(FileService::class);
+        $indexService->registerEventHooks();
     }
 
 }

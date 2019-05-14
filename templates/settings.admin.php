@@ -69,6 +69,17 @@ Util::addStyle(Application::APP_NAME, 'admin');
 			</div>
 		</div>
 
+        <div class="div-table-row">
+            <div class="div-table-col div-table-col-left">
+                <span class="leftcol"><?php p($l->t('Commit Within')); ?>:</span>
+                <br/>
+                <em><?php p($l->t('Milliseconds to commit within.  0 for auto-commit.')); ?></em>
+            </div>
+            <div class="div-table-col">
+                <input type="text" id="solr_commit_within" placeholder="nextcloud"/>
+            </div>
+        </div>
+
 	</div>
 
 

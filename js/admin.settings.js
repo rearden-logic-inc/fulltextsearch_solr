@@ -51,6 +51,7 @@ var solr_settings = {
 
 		solr_elements.solr_servlet.val(result.solr_servlet);
 		solr_elements.solr_core.val(result.solr_core);
+		solr_elements.solr_commit_within.val(result.solr_commit_within);
 
 		fts_admin_settings.tagSettingsAsSaved(solr_elements.solr_div);
 	},
@@ -60,7 +61,8 @@ var solr_settings = {
 
 		var data = {
 			solr_servlet: solr_elements.solr_servlet.val(),
-			solr_core: solr_elements.solr_core.val()
+			solr_core: solr_elements.solr_core.val(),
+			solr_commit_within: solr_elements.solr_commit_within.val()
 		};
 
 		$.ajax({
