@@ -91,11 +91,18 @@ class SearchService {
                                    "provider" => $searchResult->getProvider()->getId()));
 
         $selectQuery = $client->createSelect();
+        $selectQuery->setFields(['id', 'nc_*', 'title', 'score']);
         $selectQuery->setOmitHeader(false);
+        $selectQuery->setQueryDefaultField('text');
 
         $selectQuery->setQuery($request->getSearch());
         $selectQuery->setStart(($request->getPage() -1) * $request->getSize());
         $selectQuery->setRows($request->getSize());
+
+        $hl = $selectQuery->getHighlighting();
+        $hl->addField(IndexMappingService::TEXT_STORAGE_FIELD);
+        $hl->setSimplePrefix('');
+        $hl->setSimplePostfix('');
 
         // Add the list of tags from the select query to the search request
         if (!empty($request->getTags())) {
@@ -135,7 +142,11 @@ class SearchService {
         $searchResult->setTimedOut(false);
 
         foreach ($result->response->docs as $entry) {
-            $searchResult->addDocument($this->parseSearchEntry($entry, $access->getViewerId()));
+            $entryId = $entry->id;
+
+            $highlighting = $result->highlighting->$entryId;
+
+            $searchResult->addDocument($this->parseSearchEntry($entry, $access->getViewerId(), $highlighting));
         }
     }
 
@@ -145,7 +156,7 @@ class SearchService {
      *
      * @return IndexDocument
      */
-    private function parseSearchEntry(object $entry, string $viewerId): IndexDocument {
+    private function parseSearchEntry(object $entry, string $viewerId, object $highlighting): IndexDocument {
         $access = new DocumentAccess();
         $access->setViewerId($viewerId);
 
@@ -160,13 +171,16 @@ class SearchService {
         } else {
             $document->setTitle('Unknown Document Title');
         }
+//        $document->addTag('Yoshi');
+//        $document->addExcerpt('Here is an exceprt from a document');
 
+        if (property_exists($highlighting, 'text')) {
+            $document->setExcerpts(
+			    $highlighting->text
+		    );
+        }
         // TODO: Figure out highlighting
-//		$document->setExcerpts(
-//			$this->parseSearchEntryExcerpts(
-//				(array_key_exists('highlight', $entry)) ? $entry['highlight'] : []
-//			)
-//		);
+
 
         return $document;
     }

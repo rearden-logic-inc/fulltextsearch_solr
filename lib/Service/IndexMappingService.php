@@ -51,6 +51,7 @@ use Solarium\Exception\HttpException as SolariumHttpException;
  */
 class IndexMappingService {
 
+    const TEXT_STORAGE_FIELD = 'text';
 
     /** @var ConfigService */
     private $configService;
@@ -126,6 +127,10 @@ class IndexMappingService {
         // Create the extract query for the file
         $query = $client->createExtract();
         $query->setFile($realPath);
+
+        // Need to store the content of the files in a field that is in the index so that it can be accessed
+        // and highlighted if desired.  Content is where Tika puts the parsed content.
+        $query->addFieldMapping('content', self::TEXT_STORAGE_FIELD);
         $query->setUprefix(Utils::USER_PREFIX);
 //        $query->setCommit(true);  // Tell the servlet to commit the new data immediately
         $commitTime = (int) $this->configService->getAppValue(ConfigService::SOLR_COMMIT_WITHIN);
