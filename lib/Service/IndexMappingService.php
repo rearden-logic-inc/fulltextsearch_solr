@@ -32,7 +32,6 @@ declare(strict_types=1);
 namespace OCA\FullTextSearch_Solr\Service;
 
 
-use Exception;
 use OCA\Files_FullTextSearch\Model\FilesDocument;
 use OCA\FullTextSearch\Exceptions\NotIndexableDocumentException;
 use OCA\FullTextSearch\Exceptions\ProviderIsNotCompatibleException;
@@ -92,7 +91,7 @@ class IndexMappingService {
 
             /** @var FilesDocument $document*/
             if ($document->getType() == 'dir') {
-                throw new NotIndexableDocumentException("File is a directory");
+                throw new NotIndexableDocumentException("Node is a directory");
             }
 
             return $this->indexFile($client, $document);
