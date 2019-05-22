@@ -171,16 +171,12 @@ class SearchService {
         } else {
             $document->setTitle('Unknown Document Title');
         }
-//        $document->addTag('Yoshi');
-//        $document->addExcerpt('Here is an exceprt from a document');
 
         if (property_exists($highlighting, 'text')) {
             $document->setExcerpts(
 			    $highlighting->text
 		    );
         }
-        // TODO: Figure out highlighting
-
 
         return $document;
     }
