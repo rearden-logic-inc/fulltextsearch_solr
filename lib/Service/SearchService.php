@@ -112,7 +112,7 @@ class SearchService {
         // Add all of the metadata queries to the search request
         if (!empty($request->getSubTags())) {
             foreach ($request->getSubTags() as $key => $value) {
-                $selectQuery->createFilterQuery($key)->setQuery(Utils::createDocumentField($key).":{$value}");
+                $selectQuery->createFilterQuery($key)->setQuery(Utils::createDocumentField($key).":{$value[0]}");
             }
         }
 
