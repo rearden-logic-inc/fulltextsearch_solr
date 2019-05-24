@@ -10,7 +10,7 @@ Extension to the _Full text search_ app to communicate with Solr.
 
 ]]>
 	</description>
-	<version>0.3.0</version>
+	<version>0.4.0</version>
 	<licence>agpl</licence>
 	<author>Rearden Logic</author>
 	<namespace>FullTextSearch_Solr</namespace>
@@ -19,14 +19,10 @@ Extension to the _Full text search_ app to communicate with Solr.
 		<admin>https://github.com/nextcloud/fulltextsearch_elasticsearch/wiki</admin>
 	</documentation>
 	<category>search</category>
-	<!-- TODO: Change -->
-	<website>https://github.com/nextcloud/fulltextsearch_elasticsearch</website>
-	<!-- TODO: Change -->
-	<bugs>https://github.com/nextcloud/fulltextsearch_elasticsearch/issues</bugs>
-	<!-- TODO: Change -->
-	<repository>https://github.com/nextcloud/fulltextsearch_elasticsearch.git</repository>
-	<!-- TODO: Change -->
-	<screenshot>https://raw.githubusercontent.com/nextcloud/fulltextsearch/master/screenshots/0.3.0.png</screenshot>
+	<website>https://github.com/rearden-logic-inc/fulltextsearch_solr</website>
+	<bugs>https://github.com/rearden-logic-inc/fulltextsearch_solr/issues</bugs>
+	<repository>https://github.com/rearden-logic-inc/fulltextsearch_solr.git</repository>
+	<screenshot>https://raw.githubusercontent.com/rearden-logic-inc/fulltextsearch_solr/master/screenshots/screenshot.png</screenshot>
 	<dependencies>
 		<nextcloud min-version="15" max-version="15"/>
 	</dependencies>

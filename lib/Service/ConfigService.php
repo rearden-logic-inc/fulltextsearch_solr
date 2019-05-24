@@ -48,11 +48,13 @@ class ConfigService {
 
     const SOLR_SERVLET = 'solr_servlet';
     const SOLR_CORE = 'solr_core';
+    const SOLR_COMMIT_WITHIN = 'solr_commit_within';
 
 
     public $defaults = [
         self::SOLR_SERVLET => 'http://localhost:8983/solr/',
-        self::SOLR_CORE => 'nextcloud'
+        self::SOLR_CORE => 'nextcloud',
+        self::SOLR_COMMIT_WITHIN => '15',
     ];
 
     /** @var IConfig */

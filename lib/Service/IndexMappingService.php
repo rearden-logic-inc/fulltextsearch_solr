@@ -32,11 +32,9 @@ declare(strict_types=1);
 namespace OCA\FullTextSearch_Solr\Service;
 
 
-use Exception;
 use OCA\Files_FullTextSearch\Model\FilesDocument;
 use OCA\FullTextSearch\Exceptions\NotIndexableDocumentException;
 use OCA\FullTextSearch\Exceptions\ProviderIsNotCompatibleException;
-use OCA\FullTextSearch_Solr\Exceptions\AccessIsEmptyException;
 use OCA\FullTextSearch_Solr\Exceptions\DataExtractionException;
 Use OCA\FullTextSearch_Solr\Utilities\Utils;
 use OCP\Files\IRootFolder;
@@ -53,6 +51,7 @@ use Solarium\Exception\HttpException as SolariumHttpException;
  */
 class IndexMappingService {
 
+    const TEXT_STORAGE_FIELD = 'text';
 
     /** @var ConfigService */
     private $configService;
@@ -92,7 +91,7 @@ class IndexMappingService {
 
             /** @var FilesDocument $document*/
             if ($document->getType() == 'dir') {
-                throw new NotIndexableDocumentException("File is a directory");
+                throw new NotIndexableDocumentException("Node is a directory");
             }
 
             return $this->indexFile($client, $document);
@@ -100,7 +99,6 @@ class IndexMappingService {
         }
 
         throw new ProviderIsNotCompatibleException("Solr Platform does not support provider type: ".$document->getProviderId());
-
     }
 
     /**
@@ -116,21 +114,38 @@ class IndexMappingService {
 
         // Currently have to write out the content of the file to a temporary location because only
         // the content is provided.
-        $tmpfname = tempnam(sys_get_temp_dir(), $document->getTitle());
-        $handle = fopen($tmpfname, "w");
-        fwrite($handle, base64_decode($document->getContent()));
-        fclose($handle);
+        $realPath = $document->getInfo(FileService::PATH_INFO_KEY, '');
+        $tempUsed = false;
+        if (empty($realPath)) {
+            $realPath = tempnam(sys_get_temp_dir(), $document->getTitle());
+            $handle = fopen($realPath, "w");
+            fwrite($handle, base64_decode($document->getContent()));
+            fclose($handle);
+            $tempUsed = true;
+        }
 
         // Create the extract query for the file
         $query = $client->createExtract();
-        $query->setFile($tmpfname);
+        $query->setFile($realPath);
+
+        // Need to store the content of the files in a field that is in the index so that it can be accessed
+        // and highlighted if desired.  Content is where Tika puts the parsed content.
+        $query->addFieldMapping('content', self::TEXT_STORAGE_FIELD);
         $query->setUprefix(Utils::USER_PREFIX);
-        $query->setCommit(true);  // Tell the servlet to commit the new data immediately
+//        $query->setCommit(true);  // Tell the servlet to commit the new data immediately
+        $commitTime = (int) $this->configService->getAppValue(ConfigService::SOLR_COMMIT_WITHIN);
+        if ($commitTime <= 0) {
+            $query->setCommit(true);
+        } else {
+            $query->setCommitWithin($commitTime * 1000);
+        }
+
 
         // Generate any additional metadata files to be associated with the document.
         $doc = $query->createDocument();
         $doc->id = Utils::generateDocumentIdentifier($document->getProviderId(), $document->getId());
         $doc->tags = $document->getTags();
+        $doc->comments = $document->getParts()['comments'];
 
         $subTags = $document->getSubTags();
         foreach (array_keys($subTags) as $subTagKey) {
@@ -147,38 +162,11 @@ class IndexMappingService {
         } catch (SolariumHttpException $e) {
             throw new DataExtractionException($document->getTitle(), $e->getCode(), $e);
         } finally {
-            unlink($tmpfname);
+            if ($tempUsed) {
+                unlink($realPath);
+            }
         }
 
-    }
-
-    /**
-     * @param Client $client
-     * @param IndexDocument $document
-     *
-     * @return array
-     */
-    public function indexDocumentUpdate(Client $client, IndexDocument $document): array {
-
-        $this->logger->debug("Running indexDocumentUpdate");
-
-        return null;
-//		$index = [
-//			'index' =>
-//				[
-//					'index' => $this->configService->getSolrIndex(),
-//					'id'    => $document->getProviderId() . ':' . $document->getId(),
-//					'type'  => 'standard',
-//					'body'  => ['doc' => $this->generateIndexBody($document)]
-//				]
-//		];
-//
-//		$this->onIndexingDocument($document, $index);
-//		try {
-//			return $client->update($index['index']);
-//		} catch (Missing404Exception $e) {
-//			return $this->indexDocumentNew($client, $document);
-//		}
     }
 
     /**
@@ -202,55 +190,6 @@ class IndexMappingService {
         // this executes the query and returns the result
         $client->update($update);
 
-    }
-
-    /**
-     * @param IndexDocument $document
-     * @param array $arr
-     */
-    public function onIndexingDocument(IndexDocument $document, array &$arr) {
-        if ($document->getContent() !== ''
-            && $document->isContentEncoded() === IndexDocument::ENCODED_BASE64) {
-            $arr['index']['pipeline'] = 'attachment';
-        }
-    }
-
-
-    /**
-     * @param IndexDocument $document
-     *
-     * @return array
-     * @throws AccessIsEmptyException
-     */
-    public function generateIndexBody(IndexDocument $document): array {
-
-        $access = $document->getAccess();
-        if ($access === null) {
-            throw new AccessIsEmptyException('DocumentAccess is Empty');
-        }
-
-        // TODO: check if we can just update META or just update CONTENT.
-//		$index = $document->getIndex();
-//		$body = [];
-//		if ($index->isStatus(IIndex::INDEX_META)) {
-        $body = [
-            'owner' => $access->getOwnerId(),
-            'users' => $access->getUsers(),
-            'groups' => $access->getGroups(),
-            'circles' => $access->getCircles(),
-            'links' => $access->getLinks(),
-            'metatags' => $document->getMetaTags(),
-            'subtags' => $document->getSubTags(true),
-            'tags' => $document->getTags(),
-            'hash' => $document->getHash(),
-            'provider' => $document->getProviderId(),
-            'source' => $document->getSource(),
-            'title' => $document->getTitle(),
-            'parts' => $document->getParts()
-        ];
-//		}
-
-        return array_merge($document->getInfoAll(), $body);
     }
 
 }

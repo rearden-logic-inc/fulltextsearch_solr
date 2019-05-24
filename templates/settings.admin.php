@@ -43,8 +43,9 @@ Util::addStyle(Application::APP_NAME, 'admin');
 ?>
 
 <div id="solr" class="section" style="display: none;">
-	<h2><?php p($l->t('Solr')) ?></h2>
+	<h2><?php p($l->t('Solr Platform Configuration')) ?></h2>
 
+    <h3 class="hsub"><?php p($l->t('Connection')); ?></h3>
 	<div class="div-table">
 
 		<div class="div-table-row">
@@ -68,6 +69,20 @@ Util::addStyle(Application::APP_NAME, 'admin');
 				<input type="text" id="solr_core" placeholder="nextcloud"/>
 			</div>
 		</div>
+    </div>
+
+    <h3 class="hsub"><?php p($l->t('Indexing')); ?></h3>
+    <div class="div-table">
+        <div class="div-table-row">
+            <div class="div-table-col div-table-col-left">
+                <span class="leftcol"><?php p($l->t('Commit Within')); ?>:</span>
+                <br/>
+                <em><?php p($l->t('Milliseconds to commit within.  0 for auto-commit.')); ?></em>
+            </div>
+            <div class="div-table-col">
+                <input type="text" id="solr_commit_within" placeholder="nextcloud"/>
+            </div>
+        </div>
 
 	</div>
 

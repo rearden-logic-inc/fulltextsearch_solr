@@ -36,11 +36,13 @@ var solr_elements = {
 	solr_div: null,
 	solr_servlet: null,
 	solr_core: null,
+	solr_commit_within: null,
 
 	init: function () {
 		solr_elements.solr_div = $('#solr');
 		solr_elements.solr_servlet = $('#solr_servlet');
 		solr_elements.solr_core = $('#solr_core');
+		solr_elements.solr_commit_within = $('#solr_commit_within');
 
 		solr_elements.solr_servlet.on('input', function () {
 			fts_admin_settings.tagSettingsAsNotSaved($(this));
@@ -54,6 +56,11 @@ var solr_elements = {
 			solr_settings.saveSettings();
 		});
 
+		solr_elements.solr_commit_within.on('input', function () {
+			fts_admin_settings.tagSettingsAsNotSaved($(this));
+		}).blur(function () {
+			solr_settings.saveSettings();
+		});
 	}
 
 };

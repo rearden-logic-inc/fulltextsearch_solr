@@ -134,8 +134,9 @@ class SolrPlatform implements IFullTextSearchPlatform {
         $result[] = $safeHost;
 
         return [
-            'solr_servlet' => $result,
-            'solr_core' => $this->configService->getSolrCore()
+            ConfigService::SOLR_SERVLET => $result,
+            ConfigService::SOLR_CORE => $this->configService->getSolrCore(),
+            ConfigService::SOLR_COMMIT_WITHIN => $this->configService->getAppValue(ConfigService::SOLR_COMMIT_WITHIN)
         ];
     }
 

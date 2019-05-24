@@ -1,5 +1,14 @@
 # Changelog
 
+## v 0.4.0
+
+- Features
+  - Search and index comments from files
+  - Add absolute path when possible to index document so file doesn't need to be written out before indexing.
+- Fixes
+  - Remove unnecessary comments/methods/todos
+  - Improve exception messages
+
 ## v 0.3.0
 
 - Features
