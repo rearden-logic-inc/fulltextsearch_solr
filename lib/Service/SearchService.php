@@ -112,7 +112,7 @@ class SearchService {
         // Add all of the metadata queries to the search request
         if (!empty($request->getSubTags())) {
             foreach ($request->getSubTags() as $key => $value) {
-                $selectQuery->createFilterQuery($key)->setQuery(Utils::createDocumentField($key).":{$value}");
+                $selectQuery->createFilterQuery($key)->setQuery(Utils::createDocumentField($key).":{$value[0]}");
             }
         }
 
@@ -171,16 +171,12 @@ class SearchService {
         } else {
             $document->setTitle('Unknown Document Title');
         }
-//        $document->addTag('Yoshi');
-//        $document->addExcerpt('Here is an exceprt from a document');
 
         if (property_exists($highlighting, 'text')) {
             $document->setExcerpts(
 			    $highlighting->text
 		    );
         }
-        // TODO: Figure out highlighting
-
 
         return $document;
     }

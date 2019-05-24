@@ -145,6 +145,7 @@ class IndexMappingService {
         $doc = $query->createDocument();
         $doc->id = Utils::generateDocumentIdentifier($document->getProviderId(), $document->getId());
         $doc->tags = $document->getTags();
+        $doc->comments = $document->getParts()['comments'];
 
         $subTags = $document->getSubTags();
         foreach (array_keys($subTags) as $subTagKey) {
