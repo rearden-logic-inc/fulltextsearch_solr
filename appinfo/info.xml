@@ -29,6 +29,7 @@ Extension to the _Full text search_ app to communicate with Solr.
 
 	<commands>
 		<command>OCA\FullTextSearch_Solr\Command\Configure</command>
+		<command>OCA\FullTextSearch_Solr\Command\Optimize</command>
 	</commands>
 
 	<settings>
