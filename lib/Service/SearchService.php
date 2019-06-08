@@ -79,10 +79,8 @@ class SearchService {
      *
      * @throws Exception
      */
-    // TODO
-    public function searchRequest(
-        Client $client, ISearchResult $searchResult, DocumentAccess $access
-    ) {
+
+    public function searchRequest(Client $client, ISearchResult $searchResult, DocumentAccess $access) {
 
         /** @var SearchRequest $request */
         $request = $searchResult->getRequest();
@@ -91,9 +89,9 @@ class SearchService {
                                    "provider" => $searchResult->getProvider()->getId()));
 
         $selectQuery = $client->createSelect();
-        $selectQuery->setFields(['id', 'nc_*', 'title', 'score']);
+        $selectQuery->setFields(['id', Utils::createDocumentField('*'), 'title', 'score']);
         $selectQuery->setOmitHeader(false);
-        $selectQuery->setQueryDefaultField('text');
+        $selectQuery->setQueryDefaultField(IndexMappingService::TEXT_STORAGE_FIELD);
 
         $selectQuery->setQuery($request->getSearch());
         $selectQuery->setStart(($request->getPage() -1) * $request->getSize());
@@ -112,7 +110,7 @@ class SearchService {
         // Add all of the metadata queries to the search request
         if (!empty($request->getSubTags())) {
             foreach ($request->getSubTags() as $key => $value) {
-                $selectQuery->createFilterQuery($key)->setQuery(Utils::createDocumentField($key).":{$value[0]}");
+                $selectQuery->createFilterQuery($key)->setQuery(Utils::createDocumentField($key).":\"{$value[0]}\"");
             }
         }
 
@@ -172,9 +170,9 @@ class SearchService {
             $document->setTitle('Unknown Document Title');
         }
 
-        if (property_exists($highlighting, 'text')) {
+        if (property_exists($highlighting, IndexMappingService::TEXT_STORAGE_FIELD)) {
             $document->setExcerpts(
-			    $highlighting->text
+			    $highlighting->{IndexMappingService::TEXT_STORAGE_FIELD}
 		    );
         }
 
