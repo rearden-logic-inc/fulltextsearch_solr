@@ -46,6 +46,8 @@ use OCP\FullTextSearch\Model\IIndex;
 use OCP\FullTextSearch\Model\IndexDocument;
 use OCP\FullTextSearch\Model\IRunner;
 use OCP\FullTextSearch\Model\ISearchResult;
+use Solarium\Core\Query\Result\ResultInterface;
+use Solarium\QueryType\Update\Result;
 
 
 /**
@@ -371,6 +373,25 @@ class SolrPlatform implements IFullTextSearchPlatform {
         $this->logger->debug("Asked to retrieve document");
 //		return $this->searchService->getDocument($this->client, $providerId, $documentId);
         return null;
+    }
+
+    /**
+     * @return ResultInterface|Result
+     * @throws Exception
+     */
+    public function optimize() {
+
+        if (is_null($this->client)) {
+            throw new Exception('Client not connected');
+        }
+
+        $updateQuery = $this->client->createUpdate();
+
+        $updateQuery->addOptimize(true, false);
+
+        $result = $this->client->update($updateQuery);
+
+        return $result;
     }
 
 
