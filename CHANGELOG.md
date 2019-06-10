@@ -1,5 +1,14 @@
 # Changelog
 
+## v 0.5.0
+
+- Features
+  - Add optimize command for solr
+
+- Fixes
+  - Issues with uprefix are not worked out.  Automatically adding nc_ to tags, comments, and any subtags that are in
+    the index document. 
+
 ## v 0.4.0
 
 - Features
