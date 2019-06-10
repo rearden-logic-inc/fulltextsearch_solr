@@ -42,6 +42,7 @@ use OCP\FullTextSearch\Model\IndexDocument;
 use OCP\ILogger;
 use Solarium\Client;
 use Solarium\Exception\HttpException as SolariumHttpException;
+use Solarium\QueryType\Update\Query\Document;
 
 
 /**
@@ -131,8 +132,6 @@ class IndexMappingService {
         // Need to store the content of the files in a field that is in the index so that it can be accessed
         // and highlighted if desired.  Content is where Tika puts the parsed content.
         $query->addFieldMapping('content', self::TEXT_STORAGE_FIELD);
-        $query->setUprefix(Utils::USER_PREFIX);
-//        $query->setCommit(true);  // Tell the servlet to commit the new data immediately
         $commitTime = (int) $this->configService->getAppValue(ConfigService::SOLR_COMMIT_WITHIN);
         if ($commitTime <= 0) {
             $query->setCommit(true);
@@ -142,14 +141,16 @@ class IndexMappingService {
 
 
         // Generate any additional metadata files to be associated with the document.
+        /** @var Document $doc */
         $doc = $query->createDocument();
         $doc->id = Utils::generateDocumentIdentifier($document->getProviderId(), $document->getId());
-        $doc->tags = $document->getTags();
-        $doc->comments = $document->getParts()['comments'];
+
+        $doc->addField(Utils::createDocumentField('tags'), $document->getTags());
+        $doc->addField(Utils::createDocumentField('comments'), $document->getParts()['comments']);
 
         $subTags = $document->getSubTags();
         foreach (array_keys($subTags) as $subTagKey) {
-            $doc->$subTagKey = $subTags[$subTagKey];
+            $doc->addField(Utils::createDocumentField($subTagKey), $subTags[$subTagKey]);
         }
 
         $query->setDocument($doc);
