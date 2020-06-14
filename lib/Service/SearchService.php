@@ -99,8 +99,8 @@ class SearchService {
 
         $hl = $selectQuery->getHighlighting();
         $hl->addField(IndexMappingService::TEXT_STORAGE_FIELD);
-        $hl->setSimplePrefix('');
-        $hl->setSimplePostfix('');
+        $hl->setSimplePrefix('<b>');
+        $hl->setSimplePostfix('</b>');
 
         // Add the list of tags from the select query to the search request
         if (!empty($request->getTags())) {
